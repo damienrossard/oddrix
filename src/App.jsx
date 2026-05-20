@@ -1332,8 +1332,274 @@ function LogoSVG({ size=44 }) {
 }
 
 // ── Splash Screen 3 phases ───────────────────────────────────────────────
-// ── Splash Screen 3 actes ────────────────────────────────────────────────
+// ── Splash Screen cinématique ────────────────────────────────────────────
 function SplashScreen({ userName }) {
+  const hour = new Date().getHours();
+  const timeGreet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+
+  return (
+    <div style={{
+      position:"fixed", inset:0,
+      background:"radial-gradient(ellipse at 50% 45%, #0a1f0f 0%, #060d08 55%, #020504 100%)",
+      display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      zIndex:9999, overflow:"hidden"
+    }}>
+      <style>{`
+        /* ── 1. Cercle se trace lentement ── */
+        @keyframes circleTrace {
+          0%   { stroke-dashoffset:600; opacity:0; }
+          8%   { opacity:1; }
+          35%,100% { stroke-dashoffset:0; opacity:1; }
+        }
+
+        /* ── 2. Fond sombre apparaît ── */
+        @keyframes bgFade {
+          0%,5% { opacity:0; }
+          25%,100% { opacity:.92; }
+        }
+
+        /* ── 3. Barres montent une par une lentement ── */
+        @keyframes bar1 {
+          0%,20% { transform:scaleY(0); opacity:0; }
+          38%    { transform:scaleY(1.06); opacity:1; }
+          45%,100% { transform:scaleY(1); opacity:1; }
+        }
+        @keyframes bar2 {
+          0%,28% { transform:scaleY(0); opacity:0; }
+          46%    { transform:scaleY(1.06); opacity:1; }
+          53%,100% { transform:scaleY(1); opacity:1; }
+        }
+        @keyframes bar3 {
+          0%,36% { transform:scaleY(0); opacity:0; }
+          54%    { transform:scaleY(1.08); opacity:1; }
+          61%,100% { transform:scaleY(1); opacity:1; }
+        }
+        @keyframes bar4 {
+          0%,44% { transform:scaleY(0); opacity:0; }
+          62%    { transform:scaleY(1.08); opacity:1; }
+          69%,100% { transform:scaleY(1); opacity:1; }
+        }
+        @keyframes bar5 {
+          0%,52% { transform:scaleY(0); opacity:0; }
+          70%    { transform:scaleY(1.06); opacity:1; }
+          77%,100% { transform:scaleY(1); opacity:1; }
+        }
+
+        /* ── 4. Ligne de tendance se trace ── */
+        @keyframes lineTrace {
+          0%,55%  { stroke-dashoffset:400; opacity:0; }
+          60%     { opacity:1; }
+          78%,100%{ stroke-dashoffset:0; opacity:1; }
+        }
+
+        /* ── 5. Points apparaissent un à un ── */
+        @keyframes dot1 { 0%,62%{transform:scale(0);opacity:0} 70%{transform:scale(1.5);opacity:1} 76%,100%{transform:scale(1);opacity:1} }
+        @keyframes dot2 { 0%,66%{transform:scale(0);opacity:0} 74%{transform:scale(1.5);opacity:1} 80%,100%{transform:scale(1);opacity:1} }
+        @keyframes dot3 { 0%,70%{transform:scale(0);opacity:0} 78%{transform:scale(1.5);opacity:1} 84%,100%{transform:scale(1);opacity:1} }
+        @keyframes dot4 { 0%,74%{transform:scale(0);opacity:0} 82%{transform:scale(1.5);opacity:1} 88%,100%{transform:scale(1);opacity:1} }
+        @keyframes dot5 { 0%,78%{transform:scale(0);opacity:0} 86%{transform:scale(1.6);opacity:1} 92%,100%{transform:scale(1);opacity:1} }
+
+        /* ── 6. Ballon arrive en rebondissant depuis le bas ── */
+        @keyframes ballIn {
+          0%,58%  { transform:translateY(280px) scale(0.2) rotate(0deg);   opacity:0; }
+          62%     { opacity:1; }
+          74%     { transform:translateY(-35px)  scale(1.15) rotate(200deg); opacity:1; }
+          81%     { transform:translateY(14px)   scale(0.92) rotate(250deg); opacity:1; }
+          87%     { transform:translateY(-14px)  scale(1.06) rotate(290deg); opacity:1; }
+          91%     { transform:translateY(5px)    scale(0.98) rotate(315deg); opacity:1; }
+          95%     { transform:translateY(-5px)   scale(1.02) rotate(335deg); opacity:1; }
+          100%    { transform:translateY(0px)    scale(1)    rotate(360deg); opacity:1; }
+        }
+
+        /* Ombre ballon */
+        @keyframes shadowIn {
+          0%,58%  { transform:scaleX(.05); opacity:0; }
+          74%     { transform:scaleX(1.4); opacity:.45; }
+          81%     { transform:scaleX(.85); opacity:.2; }
+          100%    { transform:scaleX(1);   opacity:.28; }
+        }
+
+        /* ── 7. Texte Oddrix apparaît lettre par lettre ── */
+        @keyframes textReveal {
+          0%,82%  { opacity:0; transform:translateY(18px) scale(.92); }
+          90%     { opacity:1; transform:translateY(-2px) scale(1.02); }
+          100%    { opacity:1; transform:translateY(0)    scale(1); }
+        }
+
+        /* ── 8. Slogan ── */
+        @keyframes sloganIn {
+          0%,88%  { opacity:0; }
+          100%    { opacity:1; }
+        }
+
+        /* ── Barre chargement ── */
+        @keyframes loadBar { from{width:0} to{width:100%} }
+        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+
+        /* ── Lueur pulsante ── */
+        @keyframes glow {
+          0%,100% { filter:drop-shadow(0 0 8px #00e67633) }
+          50%     { filter:drop-shadow(0 0 22px #76ff0355) drop-shadow(0 0 40px #00e67633) }
+        }
+
+        /* ── Particules ── */
+        @keyframes spark {
+          0%,100% { transform:translateY(0) scale(1);    opacity:.35; }
+          50%     { transform:translateY(-20px) scale(1.3); opacity:.8; }
+        }
+
+        /* ── Anneaux ── */
+        @keyframes ring1 { to{transform:rotate(360deg)}  }
+        @keyframes ring2 { to{transform:rotate(-360deg)} }
+
+        /* Classes */
+        .c-circle  { stroke-dasharray:600; animation:circleTrace 5s ease both; }
+        .c-bg      { animation:bgFade 5s ease both; }
+        .c-bar1    { transform-origin:bottom center; animation:bar1 5s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar2    { transform-origin:bottom center; animation:bar2 5s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar3    { transform-origin:bottom center; animation:bar3 5s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar4    { transform-origin:bottom center; animation:bar4 5s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar5    { transform-origin:bottom center; animation:bar5 5s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-line    { stroke-dasharray:400; animation:lineTrace 5s ease both; }
+        .c-d1      { transform-origin:center; animation:dot1 5s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d2      { transform-origin:center; animation:dot2 5s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d3      { transform-origin:center; animation:dot3 5s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d4      { transform-origin:center; animation:dot4 5s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d5      { transform-origin:center; animation:dot5 5s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-ball    { animation:ballIn 5s cubic-bezier(.34,1.1,.64,1) both; }
+        .c-shadow  { animation:shadowIn 5s ease both; }
+        .c-text    { animation:textReveal 5s cubic-bezier(.34,1.2,.64,1) both; }
+        .c-slogan  { animation:sloganIn 5s ease both; }
+        .c-glow    { animation:glow 2.5s 5s ease-in-out infinite; }
+      `}</style>
+
+      {/* Particules fond */}
+      {[...Array(10)].map((_,i)=>(
+        <div key={i} style={{
+          position:"absolute",
+          width:2+(i%3)*2, height:2+(i%3)*2, borderRadius:"50%",
+          background:["#00e676","#76ff03","#1de9b6"][i%3],
+          left:`${6+i*9}%`, top:`${8+(i*19)%72}%`,
+          animation:`spark ${2+i*0.4}s ${i*0.3}s ease-in-out infinite`,
+        }}/>
+      ))}
+
+      {/* Anneaux */}
+      <div style={{position:"absolute",width:380,height:380,borderRadius:"50%",border:"1px solid #00e67610",animation:"ring1 16s linear infinite"}}/>
+      <div style={{position:"absolute",width:320,height:320,borderRadius:"50%",border:"1px dashed #76ff0314",animation:"ring2 11s linear infinite"}}/>
+
+      {/* ═══ SVG LOGO SE CONSTRUIT ═══ */}
+      <div className="c-glow" style={{position:"relative",width:270,height:270}}>
+        <svg width="270" height="270" viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gBar" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1de9b6"/><stop offset="100%" stopColor="#76ff03"/>
+            </linearGradient>
+            <linearGradient id="gCirc" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3dff6e"/><stop offset="100%" stopColor="#76ff03"/>
+            </linearGradient>
+            <radialGradient id="gBall" cx="36%" cy="30%">
+              <stop offset="0%" stopColor="#ffffff"/>
+              <stop offset="45%" stopColor="#e0e0e0"/>
+              <stop offset="100%" stopColor="#999999"/>
+            </radialGradient>
+            <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="ballDrop"><feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#000" floodOpacity=".55"/></filter>
+          </defs>
+
+          {/* Cercle — se trace en premier */}
+          <circle className="c-circle" cx="122" cy="116" r="96"
+            fill="none" stroke="url(#gCirc)" strokeWidth="4.5" strokeLinecap="round"/>
+
+          {/* Fond sombre */}
+          <circle className="c-bg" cx="122" cy="116" r="92" fill="#050d07"/>
+
+          {/* Barres — montent une par une */}
+          <rect className="c-bar1" x="44"  y="154" width="20" height="24" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar2" x="70"  y="132" width="20" height="46" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar3" x="96"  y="106" width="20" height="72" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar4" x="122" y="84"  width="20" height="94" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar5" x="148" y="96"  width="20" height="82" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+
+          {/* Ligne de tendance */}
+          <polyline className="c-line"
+            points="44,156 70,132 96,104 122,78 148,58 170,38"
+            fill="none" stroke="#00e676" strokeWidth="3"
+            strokeLinecap="round" strokeLinejoin="round"
+            filter="url(#glow2)"/>
+
+          {/* Points */}
+          <circle className="c-d1" cx="44"  cy="156" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
+          <circle className="c-d2" cx="70"  cy="132" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
+          <circle className="c-d3" cx="96"  cy="104" r="5.5" fill="#00e676" filter="url(#glow2)"/>
+          <circle className="c-d4" cx="122" cy="78"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
+          <circle className="c-d5" cx="170" cy="38"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
+
+          {/* Ballon — rebondit en dernier */}
+          <g className="c-ball" filter="url(#ballDrop)">
+            <circle cx="182" cy="186" r="40" fill="url(#gBall)"/>
+            <polygon points="182,148 193,160 189,174 175,174 171,160" fill="#111" opacity=".88"/>
+            <polygon points="182,224 171,212 175,198 189,198 193,212" fill="#222" opacity=".65"/>
+            <polygon points="144,186 156,177 170,181 170,191 156,195" fill="#222" opacity=".65"/>
+            <polygon points="220,186 208,195 194,191 194,181 208,177" fill="#222" opacity=".65"/>
+            <polygon points="158,156 165,167 161,178 150,175 147,162" fill="#1a1a1a" opacity=".5"/>
+            <polygon points="206,156 218,162 216,175 205,178 199,167" fill="#1a1a1a" opacity=".5"/>
+            <ellipse cx="168" cy="163" rx="11" ry="7" fill="white" opacity=".35" transform="rotate(-30,168,163)"/>
+          </g>
+        </svg>
+
+        {/* Ombre ballon */}
+        <div className="c-shadow" style={{
+          position:"absolute", bottom:2, right:14,
+          width:80, height:16, borderRadius:"50%",
+          background:"radial-gradient(ellipse,#00000077,transparent)",
+        }}/>
+      </div>
+
+      {/* Texte Oddrix */}
+      <div className="c-text" style={{textAlign:"center", marginTop:20}}>
+        <div style={{
+          fontFamily:"'Syne',sans-serif", fontWeight:900,
+          fontSize:38, letterSpacing:-1, lineHeight:1
+        }}>
+          <span style={{color:"#ffffff"}}>Odd</span>
+          <span style={{color:"#76ff03", textShadow:"0 0 20px #76ff0366"}}>rix</span>
+        </div>
+      </div>
+
+      {/* Salutation + slogan */}
+      <div className="c-slogan" style={{textAlign:"center", marginTop:10}}>
+        <div style={{color:"#8b949e", fontSize:13, fontWeight:600, letterSpacing:2, textTransform:"uppercase", marginBottom:5}}>
+          {timeGreet}{userName ? `, ${userName}` : ""} 👋
+        </div>
+        <div style={{color:"#8b949e", fontSize:10, letterSpacing:3, textTransform:"uppercase"}}>
+          Statistiques · Analyses · Performance
+        </div>
+      </div>
+
+      {/* Barre de chargement */}
+      <div style={{
+        width:180, height:3, background:"#1a2a1a", borderRadius:2,
+        marginTop:24, overflow:"hidden",
+        animation:"fadeIn .4s 4.8s ease forwards", opacity:0
+      }}>
+        <div style={{
+          height:"100%", borderRadius:2,
+          background:"linear-gradient(90deg,#1de9b6,#76ff03,#1de9b6)",
+          animation:"loadBar 1.8s 5s ease forwards", width:0
+        }}/>
+      </div>
+
+      {/* oddrix.fr */}
+      <div style={{
+        position:"absolute", bottom:30,
+        color:"#ffffff12", fontSize:10, letterSpacing:3, textTransform:"uppercase",
+        animation:"fadeIn .4s 5.5s ease forwards", opacity:0
+      }}>oddrix.fr</div>
+    </div>
+  );
+}
   const hour = new Date().getHours();
   const timeGreet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
   return (
@@ -2390,7 +2656,7 @@ export default function App() {
     setTimeout(() => {
       setShowSplash(false);
       setScreen(hasAccess ? "app" : "paywall");
-    }, 2600);
+    }, 7000);
   };
 
   // ── Vérifier session au démarrage
