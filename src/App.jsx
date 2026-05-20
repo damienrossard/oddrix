@@ -1577,25 +1577,108 @@ function SplashScreen({ userName, isNew=false }) {
           <circle className="c-d4" cx="134" cy="92"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
           <circle className="c-d5" cx="184" cy="52"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
 
-          {/* ── BALLON EMOJI 3D ── positionné comme dans le logo */}
-          <foreignObject className="c-ball" x="148" y="155" width="110" height="110">
-            <div xmlns="http://www.w3.org/1999/xhtml" style={{
-              width:"100px", height:"100px",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize:"82px", lineHeight:"1",
-              transform:"perspective(200px) rotateX(15deg) rotateY(-10deg)",
-              filter:"drop-shadow(3px 10px 12px rgba(0,0,0,0.85)) drop-shadow(0 0 8px rgba(0,0,0,0.5))",
-              userSelect:"none",
-            }}>⚽</div>
-          </foreignObject>
+          {/* ballon déplacé en HTML */}
         </svg>
 
-        {/* Ombre ballon */}
+        {/* Ombre ballon au sol */}
         <div className="c-shadow" style={{
-          position:"absolute", bottom:0, right:4,
-          width:92, height:18, borderRadius:"50%",
-          background:"radial-gradient(ellipse,#00000088,transparent)",
+          position:"absolute",
+          bottom:2, right:14,
+          width:88, height:14, borderRadius:"50%",
+          background:"radial-gradient(ellipse,#00000099,transparent)",
         }}/>
+
+        {/* ⚽ BALLON HTML — rebondit en dehors du SVG */}
+        <div style={{
+          position:"absolute",
+          bottom:"18px",
+          right:"8px",
+          width:"95px",
+          height:"95px",
+          animation:"ballIn 7s cubic-bezier(.34,1.1,.64,1) both",
+          transformOrigin:"center bottom",
+          zIndex:10,
+        }}>
+          {/* Sphère CSS 3D */}
+          <div style={{
+            width:"95px",
+            height:"95px",
+            borderRadius:"50%",
+            background:`
+              radial-gradient(circle at 35% 30%,
+                #ffffff 0%,
+                #f5f5f5 20%,
+                #d0d0d0 45%,
+                #aaaaaa 70%,
+                #777777 100%
+              )
+            `,
+            boxShadow:`
+              inset -8px -8px 20px rgba(0,0,0,0.5),
+              inset 4px 4px 12px rgba(255,255,255,0.4),
+              6px 12px 20px rgba(0,0,0,0.7),
+              0 0 15px rgba(0,0,0,0.4)
+            `,
+            position:"relative",
+            overflow:"hidden",
+            transform:"perspective(300px) rotateX(10deg) rotateY(-8deg)",
+          }}>
+            {/* Pentagone central noir */}
+            <div style={{
+              position:"absolute",
+              top:"18%", left:"32%",
+              width:"36%", height:"32%",
+              background:"#111",
+              clipPath:"polygon(50% 0%,100% 35%,82% 95%,18% 95%,0% 35%)",
+              borderRadius:"2px",
+            }}/>
+            {/* Hexagone gauche */}
+            <div style={{
+              position:"absolute",
+              top:"28%", left:"8%",
+              width:"30%", height:"28%",
+              background:"#1a1a1a",
+              clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+              opacity:.9,
+            }}/>
+            {/* Hexagone droite */}
+            <div style={{
+              position:"absolute",
+              top:"28%", right:"8%",
+              width:"30%", height:"28%",
+              background:"#1a1a1a",
+              clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+              opacity:.85,
+            }}/>
+            {/* Hexagone bas */}
+            <div style={{
+              position:"absolute",
+              bottom:"10%", left:"30%",
+              width:"40%", height:"32%",
+              background:"#111",
+              clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+              opacity:.8,
+            }}/>
+            {/* Reflet brillant */}
+            <div style={{
+              position:"absolute",
+              top:"10%", left:"18%",
+              width:"35%", height:"25%",
+              background:"radial-gradient(ellipse,rgba(255,255,255,.75),transparent)",
+              borderRadius:"50%",
+              transform:"rotate(-30deg)",
+            }}/>
+            {/* Petit reflet */}
+            <div style={{
+              position:"absolute",
+              top:"14%", left:"22%",
+              width:"15%", height:"12%",
+              background:"rgba(255,255,255,.85)",
+              borderRadius:"50%",
+              transform:"rotate(-30deg)",
+            }}/>
+          </div>
+        </div>
       </div>
       </div> {/* fin conteneur centré */}
 
