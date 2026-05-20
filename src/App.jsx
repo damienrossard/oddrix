@@ -1510,8 +1510,8 @@ function SplashScreen({ userName, isNew=false }) {
       ))}
 
       {/* Anneaux */}
-      <div style={{position:"absolute",width:380,height:380,borderRadius:"50%",border:"1px solid #00e67610",animation:"ring1 16s linear infinite"}}/>
-      <div style={{position:"absolute",width:320,height:320,borderRadius:"50%",border:"1px dashed #76ff0314",animation:"ring2 11s linear infinite"}}/>
+      <div style={{position:"absolute",width:380,height:380,borderRadius:"50%",border:"1px solid #00e67610",animation:"ring1 16s linear infinite",top:"50%",left:"50%",transform:"translate(-50%,-58%)"}}/>
+      <div style={{position:"absolute",width:320,height:320,borderRadius:"50%",border:"1px dashed #76ff0314",animation:"ring2 11s linear infinite",top:"50%",left:"50%",transform:"translate(-50%,-58%)"}}/>
 
       {/* ═══ SVG LOGO SE CONSTRUIT ═══ */}
       <div className="c-glow" style={{position:"relative",width:290,height:290,margin:"0 auto"}}>
@@ -1562,58 +1562,71 @@ function SplashScreen({ userName, isNew=false }) {
           <circle className="c-d4" cx="134" cy="92"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
           <circle className="c-d5" cx="184" cy="52"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
 
-          {/* ── BALLON DE FOOT RÉALISTE ── hexagones + pentagones */}
+          {/* ── BALLON DE FOOT ── patron classique noir/blanc symétrique */}
           <g className="c-ball" filter="url(#ballDrop)">
-            {/* Corps */}
-            <circle cx="200" cy="204" r="46" fill="url(#gBall)" stroke="#bbbbbb" strokeWidth=".8"/>
+            {/* Clippath pour garder dans le cercle */}
+            <clipPath id="ballClip">
+              <circle cx="200" cy="204" r="45"/>
+            </clipPath>
 
-            {/* Pentagone NOIR central haut */}
-            <path d="M200,164 L215,174 L210,191 L190,191 L185,174 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+            {/* Corps blanc de base */}
+            <circle cx="200" cy="204" r="45" fill="#f0f0f0" stroke="#aaaaaa" strokeWidth=".8"/>
 
-            {/* Hexagone blanc haut-gauche */}
-            <path d="M185,174 L172,165 L164,177 L171,192 L185,191 Z"
-              fill="#e8e8e8" stroke="#444" strokeWidth=".7"/>
+            {/* ── Patron soccer classique ── */}
+            {/* Pentagone central NOIR */}
+            <polygon clipPath="url(#ballClip)"
+              points="200,167 213,177 208,192 192,192 187,177"
+              fill="#111111" stroke="#000" strokeWidth="1.2"/>
 
-            {/* Hexagone blanc haut-droite */}
-            <path d="M215,174 L228,165 L236,177 L229,192 L215,191 Z"
-              fill="#dcdcdc" stroke="#444" strokeWidth=".7"/>
+            {/* 5 hexagones BLANCS autour du pentagone central */}
+            {/* hex haut-gauche */}
+            <polygon clipPath="url(#ballClip)"
+              points="187,177 174,168 164,179 168,194 182,198 192,192"
+              fill="#e8e8e8" stroke="#555" strokeWidth=".9"/>
+            {/* hex haut-droite */}
+            <polygon clipPath="url(#ballClip)"
+              points="213,177 226,168 236,179 232,194 218,198 208,192"
+              fill="#e0e0e0" stroke="#555" strokeWidth=".9"/>
+            {/* hex gauche */}
+            <polygon clipPath="url(#ballClip)"
+              points="168,194 155,192 150,207 160,218 174,216 182,204"
+              fill="#e8e8e8" stroke="#555" strokeWidth=".9"/>
+            {/* hex droite */}
+            <polygon clipPath="url(#ballClip)"
+              points="232,194 245,192 250,207 240,218 226,216 218,204"
+              fill="#e0e0e0" stroke="#555" strokeWidth=".9"/>
+            {/* hex bas-centre */}
+            <polygon clipPath="url(#ballClip)"
+              points="182,204 174,216 182,228 200,232 218,228 226,216 218,204 208,200 192,200"
+              fill="#e8e8e8" stroke="#555" strokeWidth=".9"/>
 
-            {/* Pentagone NOIR gauche */}
-            <path d="M164,177 L152,188 L156,203 L171,206 L171,192 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+            {/* 5 pentagones NOIRS entre les hexagones */}
+            {/* penta haut */}
+            <polygon clipPath="url(#ballClip)"
+              points="200,167 213,177 226,168 220,155 200,152 180,155 174,168 187,177"
+              fill="#111111" stroke="#000" strokeWidth="1.2" opacity=".9"/>
+            {/* penta bas-gauche */}
+            <polygon clipPath="url(#ballClip)"
+              points="160,218 150,207 138,215 140,230 155,238 168,232 174,216"
+              fill="#111111" stroke="#000" strokeWidth="1.2"/>
+            {/* penta bas-droite */}
+            <polygon clipPath="url(#ballClip)"
+              points="240,218 250,207 262,215 260,230 245,238 232,232 226,216"
+              fill="#111111" stroke="#000" strokeWidth="1.2"/>
+            {/* penta bas-centre */}
+            <polygon clipPath="url(#ballClip)"
+              points="182,228 168,232 170,246 200,250 230,246 232,232 218,228 200,232"
+              fill="#111111" stroke="#000" strokeWidth="1.2" opacity=".85"/>
+            {/* penta gauche-haut */}
+            <polygon clipPath="url(#ballClip)"
+              points="164,179 155,192 155,192 150,207 160,218 168,194 174,168"
+              fill="#111111" stroke="#000" strokeWidth="1.2" opacity=".8"/>
 
-            {/* Pentagone NOIR droite */}
-            <path d="M236,177 L248,188 L244,203 L229,206 L229,192 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
-
-            {/* Hexagone blanc centre — grande pièce centrale */}
-            <path d="M190,191 L171,192 L171,206 L185,218 L215,218 L229,206 L229,192 L210,191 Z"
-              fill="#e4e4e4" stroke="#444" strokeWidth=".7"/>
-
-            {/* Pentagone NOIR bas-gauche */}
-            <path d="M171,206 L156,203 L151,219 L164,228 L180,224 L185,218 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
-
-            {/* Pentagone NOIR bas-droite */}
-            <path d="M229,206 L244,203 L249,219 L236,228 L220,224 L215,218 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
-
-            {/* Hexagone blanc bas */}
-            <path d="M185,218 L180,224 L188,236 L212,236 L220,224 L215,218 Z"
-              fill="#d8d8d8" stroke="#444" strokeWidth=".7"/>
-
-            {/* Pentagone NOIR bas-centre */}
-            <path d="M188,236 L180,224 L164,228 L166,242 L200,248 L234,242 L236,228 L220,224 L212,236 Z"
-              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1" opacity=".85"/>
-
-            {/* Reflets */}
-            <ellipse cx="183" cy="174" rx="15" ry="10"
-              fill="white" opacity=".55" transform="rotate(-40,183,174)"/>
-            <ellipse cx="188" cy="177" rx="7" ry="4"
-              fill="white" opacity=".75" transform="rotate(-40,188,177)"/>
-            <ellipse cx="178" cy="185" rx="4" ry="2.5"
-              fill="white" opacity=".4" transform="rotate(-40,178,185)"/>
+            {/* Reflets lumineux */}
+            <ellipse cx="183" cy="172" rx="14" ry="9"
+              fill="white" opacity=".6" transform="rotate(-38,183,172)" clipPath="url(#ballClip)"/>
+            <ellipse cx="187" cy="175" rx="6" ry="3.5"
+              fill="white" opacity=".8" transform="rotate(-38,187,175)" clipPath="url(#ballClip)"/>
           </g>
         </svg>
 
