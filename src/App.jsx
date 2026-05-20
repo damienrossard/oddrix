@@ -1514,8 +1514,8 @@ function SplashScreen({ userName, isNew=false }) {
       <div style={{position:"absolute",width:320,height:320,borderRadius:"50%",border:"1px dashed #76ff0314",animation:"ring2 11s linear infinite"}}/>
 
       {/* ═══ SVG LOGO SE CONSTRUIT ═══ */}
-      <div className="c-glow" style={{position:"relative",width:270,height:270}}>
-        <svg width="270" height="270" viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg">
+      <div className="c-glow" style={{position:"relative",width:290,height:290,margin:"0 auto"}}>
+        <svg width="290" height="290" viewBox="0 0 290 290" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="gBar" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#1de9b6"/><stop offset="100%" stopColor="#76ff03"/>
@@ -1523,83 +1523,105 @@ function SplashScreen({ userName, isNew=false }) {
             <linearGradient id="gCirc" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#3dff6e"/><stop offset="100%" stopColor="#76ff03"/>
             </linearGradient>
-            <radialGradient id="gBall" cx="36%" cy="30%">
-              <stop offset="0%" stopColor="#ffffff"/>
-              <stop offset="45%" stopColor="#e0e0e0"/>
-              <stop offset="100%" stopColor="#999999"/>
+            <radialGradient id="gBall" cx="32%" cy="26%" r="70%">
+              <stop offset="0%"   stopColor="#ffffff"/>
+              <stop offset="25%"  stopColor="#f0f0f0"/>
+              <stop offset="60%"  stopColor="#c8c8c8"/>
+              <stop offset="100%" stopColor="#888888"/>
+            </radialGradient>
+            <radialGradient id="gBallDark" cx="40%" cy="35%" r="60%">
+              <stop offset="0%"   stopColor="#1a1a1a"/>
+              <stop offset="100%" stopColor="#000000"/>
             </radialGradient>
             <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            <filter id="ballDrop"><feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#000" floodOpacity=".55"/></filter>
+            <filter id="ballDrop"><feDropShadow dx="2" dy="8" stdDeviation="6" floodColor="#000" floodOpacity=".65"/></filter>
           </defs>
 
-          {/* Cercle — se trace en premier */}
-          <circle className="c-circle" cx="122" cy="116" r="96"
+          {/* Cercle centré */}
+          <circle className="c-circle" cx="140" cy="132" r="102"
             fill="none" stroke="url(#gCirc)" strokeWidth="4.5" strokeLinecap="round"/>
+          <circle className="c-bg" cx="140" cy="132" r="98" fill="#050d07"/>
 
-          {/* Fond sombre */}
-          <circle className="c-bg" cx="122" cy="116" r="92" fill="#050d07"/>
+          {/* Barres centrées */}
+          <rect className="c-bar1" x="56"  y="168" width="20" height="26" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar2" x="82"  y="146" width="20" height="48" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar3" x="108" y="120" width="20" height="74" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar4" x="134" y="98"  width="20" height="96" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
+          <rect className="c-bar5" x="160" y="110" width="20" height="84" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
 
-          {/* Barres — montent une par une */}
-          <rect className="c-bar1" x="44"  y="154" width="20" height="24" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
-          <rect className="c-bar2" x="70"  y="132" width="20" height="46" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
-          <rect className="c-bar3" x="96"  y="106" width="20" height="72" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
-          <rect className="c-bar4" x="122" y="84"  width="20" height="94" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
-          <rect className="c-bar5" x="148" y="96"  width="20" height="82" rx="5" fill="url(#gBar)" filter="url(#glow2)"/>
-
-          {/* Ligne de tendance */}
+          {/* Ligne tendance */}
           <polyline className="c-line"
-            points="44,156 70,132 96,104 122,78 148,58 170,38"
+            points="56,170 82,146 108,118 134,92 160,72 184,52"
             fill="none" stroke="#00e676" strokeWidth="3"
-            strokeLinecap="round" strokeLinejoin="round"
-            filter="url(#glow2)"/>
+            strokeLinecap="round" strokeLinejoin="round" filter="url(#glow2)"/>
 
           {/* Points */}
-          <circle className="c-d1" cx="44"  cy="156" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
-          <circle className="c-d2" cx="70"  cy="132" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
-          <circle className="c-d3" cx="96"  cy="104" r="5.5" fill="#00e676" filter="url(#glow2)"/>
-          <circle className="c-d4" cx="122" cy="78"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
-          <circle className="c-d5" cx="170" cy="38"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
+          <circle className="c-d1" cx="56"  cy="170" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
+          <circle className="c-d2" cx="82"  cy="146" r="5.5" fill="#1de9b6" filter="url(#glow2)"/>
+          <circle className="c-d3" cx="108" cy="118" r="5.5" fill="#00e676" filter="url(#glow2)"/>
+          <circle className="c-d4" cx="134" cy="92"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
+          <circle className="c-d5" cx="184" cy="52"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
 
-          {/* Ballon — rebondit en dernier — vrai ballon de foot */}
+          {/* ── BALLON DE FOOT RÉALISTE ── hexagones + pentagones */}
           <g className="c-ball" filter="url(#ballDrop)">
-            {/* Corps blanc du ballon */}
-            <circle cx="182" cy="186" r="42" fill="url(#gBall)" stroke="#cccccc" strokeWidth=".5"/>
+            {/* Corps */}
+            <circle cx="200" cy="204" r="46" fill="url(#gBall)" stroke="#bbbbbb" strokeWidth=".8"/>
 
-            {/* Pentagone central noir */}
-            <polygon
-              points="182,162 196,172 191,188 173,188 168,172"
-              fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+            {/* Pentagone NOIR central haut */}
+            <path d="M200,164 L215,174 L210,191 L190,191 L185,174 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
 
-            {/* 5 pentagones autour — disposition réelle d'un ballon */}
-            {/* haut-gauche */}
-            <polygon points="163,157 168,172 155,180 145,170 149,156" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
-            {/* haut-droite */}
-            <polygon points="201,157 215,156 219,170 209,180 196,172" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
-            {/* bas-droite */}
-            <polygon points="209,200 219,214 208,223 196,217 191,202" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
-            {/* bas */}
-            <polygon points="182,210 191,202 196,217 182,224 168,217 173,202" fill="#1a1a1a" stroke="#000" strokeWidth=".5" opacity=".9"/>
-            {/* bas-gauche */}
-            <polygon points="155,200 173,202 168,217 156,223 145,214" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+            {/* Hexagone blanc haut-gauche */}
+            <path d="M185,174 L172,165 L164,177 L171,192 L185,191 Z"
+              fill="#e8e8e8" stroke="#444" strokeWidth=".7"/>
 
-            {/* Lignes blanches entre pentagones */}
-            <line x1="182" y1="162" x2="182" y2="144" stroke="white" strokeWidth="1" opacity=".15"/>
-            <line x1="168" y1="172" x2="155" y2="180" stroke="white" strokeWidth="1" opacity=".15"/>
-            <line x1="196" y1="172" x2="209" y2="180" stroke="white" strokeWidth="1" opacity=".15"/>
+            {/* Hexagone blanc haut-droite */}
+            <path d="M215,174 L228,165 L236,177 L229,192 L215,191 Z"
+              fill="#dcdcdc" stroke="#444" strokeWidth=".7"/>
 
-            {/* Reflet lumineux */}
-            <ellipse cx="168" cy="160" rx="12" ry="8"
-              fill="white" opacity=".4" transform="rotate(-35,168,160)"/>
-            <ellipse cx="172" cy="163" rx="5" ry="3"
-              fill="white" opacity=".6" transform="rotate(-35,172,163)"/>
+            {/* Pentagone NOIR gauche */}
+            <path d="M164,177 L152,188 L156,203 L171,206 L171,192 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+
+            {/* Pentagone NOIR droite */}
+            <path d="M236,177 L248,188 L244,203 L229,206 L229,192 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+
+            {/* Hexagone blanc centre — grande pièce centrale */}
+            <path d="M190,191 L171,192 L171,206 L185,218 L215,218 L229,206 L229,192 L210,191 Z"
+              fill="#e4e4e4" stroke="#444" strokeWidth=".7"/>
+
+            {/* Pentagone NOIR bas-gauche */}
+            <path d="M171,206 L156,203 L151,219 L164,228 L180,224 L185,218 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+
+            {/* Pentagone NOIR bas-droite */}
+            <path d="M229,206 L244,203 L249,219 L236,228 L220,224 L215,218 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1"/>
+
+            {/* Hexagone blanc bas */}
+            <path d="M185,218 L180,224 L188,236 L212,236 L220,224 L215,218 Z"
+              fill="#d8d8d8" stroke="#444" strokeWidth=".7"/>
+
+            {/* Pentagone NOIR bas-centre */}
+            <path d="M188,236 L180,224 L164,228 L166,242 L200,248 L234,242 L236,228 L220,224 L212,236 Z"
+              fill="url(#gBallDark)" stroke="#050505" strokeWidth="1" opacity=".85"/>
+
+            {/* Reflets */}
+            <ellipse cx="183" cy="174" rx="15" ry="10"
+              fill="white" opacity=".55" transform="rotate(-40,183,174)"/>
+            <ellipse cx="188" cy="177" rx="7" ry="4"
+              fill="white" opacity=".75" transform="rotate(-40,188,177)"/>
+            <ellipse cx="178" cy="185" rx="4" ry="2.5"
+              fill="white" opacity=".4" transform="rotate(-40,178,185)"/>
           </g>
         </svg>
 
         {/* Ombre ballon */}
         <div className="c-shadow" style={{
-          position:"absolute", bottom:2, right:14,
-          width:80, height:16, borderRadius:"50%",
-          background:"radial-gradient(ellipse,#00000077,transparent)",
+          position:"absolute", bottom:0, right:4,
+          width:92, height:18, borderRadius:"50%",
+          background:"radial-gradient(ellipse,#00000088,transparent)",
         }}/>
       </div>
 
