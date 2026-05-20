@@ -1333,12 +1333,14 @@ function LogoSVG({ size=44 }) {
 
 // ── Splash Screen 3 phases ───────────────────────────────────────────────
 // ── Splash Screen cinématique ────────────────────────────────────────────
-function SplashScreen({ userName }) {
+function SplashScreen({ userName, isNew=false }) {
   const hour = new Date().getHours();
-  const timeGreet = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  const timeGreet = isNew
+    ? `Bienvenue sur Oddrix${userName ? `, ${userName}` : ""} ! 🎉`
+    : `${hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}${userName ? `, ${userName}` : ""} 👋`;
 
   return (
-    <div style={{
+    <div className="c-screen" style={{
       position:"fixed", inset:0,
       background:"radial-gradient(ellipse at 50% 45%, #0a1f0f 0%, #060d08 55%, #020504 100%)",
       display:"flex", flexDirection:"column",
@@ -1400,24 +1402,35 @@ function SplashScreen({ userName }) {
         @keyframes dot4 { 0%,74%{transform:scale(0);opacity:0} 82%{transform:scale(1.5);opacity:1} 88%,100%{transform:scale(1);opacity:1} }
         @keyframes dot5 { 0%,78%{transform:scale(0);opacity:0} 86%{transform:scale(1.6);opacity:1} 92%,100%{transform:scale(1);opacity:1} }
 
-        /* ── 6. Ballon arrive en rebondissant depuis le bas ── */
+        /* ── 6. Ballon — rebond lent et réaliste ── */
         @keyframes ballIn {
-          0%,58%  { transform:translateY(280px) scale(0.2) rotate(0deg);   opacity:0; }
-          62%     { opacity:1; }
-          74%     { transform:translateY(-35px)  scale(1.15) rotate(200deg); opacity:1; }
-          81%     { transform:translateY(14px)   scale(0.92) rotate(250deg); opacity:1; }
-          87%     { transform:translateY(-14px)  scale(1.06) rotate(290deg); opacity:1; }
-          91%     { transform:translateY(5px)    scale(0.98) rotate(315deg); opacity:1; }
-          95%     { transform:translateY(-5px)   scale(1.02) rotate(335deg); opacity:1; }
+          0%,55%  { transform:translateY(320px) scale(0.15) rotate(0deg);   opacity:0; }
+          60%     { opacity:1; }
+          /* 1er rebond — haut */
+          70%     { transform:translateY(-55px)  scale(1.18) rotate(210deg); opacity:1; }
+          /* retombe */
+          76%     { transform:translateY(18px)   scale(0.90) rotate(260deg); opacity:1; }
+          /* 2e rebond */
+          82%     { transform:translateY(-28px)  scale(1.08) rotate(300deg); opacity:1; }
+          /* retombe */
+          87%     { transform:translateY(10px)   scale(0.96) rotate(330deg); opacity:1; }
+          /* 3e rebond léger */
+          91%     { transform:translateY(-12px)  scale(1.03) rotate(345deg); opacity:1; }
+          /* stabilise */
+          95%     { transform:translateY(4px)    scale(0.99) rotate(355deg); opacity:1; }
           100%    { transform:translateY(0px)    scale(1)    rotate(360deg); opacity:1; }
         }
 
-        /* Ombre ballon */
+        /* Ombre ballon — s'écrase à chaque rebond */
         @keyframes shadowIn {
-          0%,58%  { transform:scaleX(.05); opacity:0; }
-          74%     { transform:scaleX(1.4); opacity:.45; }
-          81%     { transform:scaleX(.85); opacity:.2; }
-          100%    { transform:scaleX(1);   opacity:.28; }
+          0%,55%  { transform:scaleX(.05) scaleY(.5); opacity:0; }
+          70%     { transform:scaleX(1.6) scaleY(.4); opacity:.5; }
+          76%     { transform:scaleX(.8) scaleY(.8);  opacity:.25; }
+          82%     { transform:scaleX(1.4) scaleY(.5); opacity:.45; }
+          87%     { transform:scaleX(.9) scaleY(.8);  opacity:.28; }
+          91%     { transform:scaleX(1.2) scaleY(.6); opacity:.38; }
+          95%     { transform:scaleX(1.0) scaleY(.8); opacity:.28; }
+          100%    { transform:scaleX(1)  scaleY(1);   opacity:.25; }
         }
 
         /* ── 7. Texte Oddrix apparaît lettre par lettre ── */
@@ -1453,25 +1466,36 @@ function SplashScreen({ userName }) {
         @keyframes ring1 { to{transform:rotate(360deg)}  }
         @keyframes ring2 { to{transform:rotate(-360deg)} }
 
-        /* Classes */
-        .c-circle  { stroke-dasharray:600; animation:circleTrace 5s ease both; }
-        .c-bg      { animation:bgFade 5s ease both; }
-        .c-bar1    { transform-origin:bottom center; animation:bar1 5s cubic-bezier(.34,1.4,.64,1) both; }
-        .c-bar2    { transform-origin:bottom center; animation:bar2 5s cubic-bezier(.34,1.4,.64,1) both; }
-        .c-bar3    { transform-origin:bottom center; animation:bar3 5s cubic-bezier(.34,1.4,.64,1) both; }
-        .c-bar4    { transform-origin:bottom center; animation:bar4 5s cubic-bezier(.34,1.4,.64,1) both; }
-        .c-bar5    { transform-origin:bottom center; animation:bar5 5s cubic-bezier(.34,1.4,.64,1) both; }
-        .c-line    { stroke-dasharray:400; animation:lineTrace 5s ease both; }
-        .c-d1      { transform-origin:center; animation:dot1 5s cubic-bezier(.34,1.6,.64,1) both; }
-        .c-d2      { transform-origin:center; animation:dot2 5s cubic-bezier(.34,1.6,.64,1) both; }
-        .c-d3      { transform-origin:center; animation:dot3 5s cubic-bezier(.34,1.6,.64,1) both; }
-        .c-d4      { transform-origin:center; animation:dot4 5s cubic-bezier(.34,1.6,.64,1) both; }
-        .c-d5      { transform-origin:center; animation:dot5 5s cubic-bezier(.34,1.6,.64,1) both; }
-        .c-ball    { animation:ballIn 5s cubic-bezier(.34,1.1,.64,1) both; }
-        .c-shadow  { animation:shadowIn 5s ease both; }
-        .c-text    { animation:textReveal 5s cubic-bezier(.34,1.2,.64,1) both; }
-        .c-slogan  { animation:sloganIn 5s ease both; }
-        .c-glow    { animation:glow 2.5s 5s ease-in-out infinite; }
+        /* ── Barre chargement ── */
+        @keyframes loadBar { from{width:0} to{width:100%} }
+        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+        /* Fondu sortie vers l'app */
+        @keyframes fadeOut {
+          0%,80% { opacity:1; }
+          100%   { opacity:0; pointer-events:none; }
+        }
+
+        /* Classes — animation sur 7s */
+        .c-circle  { stroke-dasharray:600; animation:circleTrace 7s ease both; }
+        .c-bg      { animation:bgFade 7s ease both; }
+        .c-bar1    { transform-origin:bottom center; animation:bar1 7s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar2    { transform-origin:bottom center; animation:bar2 7s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar3    { transform-origin:bottom center; animation:bar3 7s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar4    { transform-origin:bottom center; animation:bar4 7s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-bar5    { transform-origin:bottom center; animation:bar5 7s cubic-bezier(.34,1.4,.64,1) both; }
+        .c-line    { stroke-dasharray:400; animation:lineTrace 7s ease both; }
+        .c-d1      { transform-origin:center; animation:dot1 7s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d2      { transform-origin:center; animation:dot2 7s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d3      { transform-origin:center; animation:dot3 7s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d4      { transform-origin:center; animation:dot4 7s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-d5      { transform-origin:center; animation:dot5 7s cubic-bezier(.34,1.6,.64,1) both; }
+        .c-ball    { animation:ballIn 7s cubic-bezier(.34,1.1,.64,1) both; }
+        .c-shadow  { animation:shadowIn 7s ease both; }
+        .c-text    { animation:textReveal 7s cubic-bezier(.34,1.2,.64,1) both; }
+        .c-slogan  { animation:sloganIn 7s ease both; }
+        .c-glow    { animation:glow 2.5s 7s ease-in-out infinite; }
+        /* Fondu écran complet — démarre à 9s, dure 1.5s */
+        .c-screen  { animation:fadeOut 10.5s 0s ease forwards; }
       `}</style>
 
       {/* Particules fond */}
@@ -1536,16 +1560,38 @@ function SplashScreen({ userName }) {
           <circle className="c-d4" cx="122" cy="78"  r="5.5" fill="#00e676" filter="url(#glow2)"/>
           <circle className="c-d5" cx="170" cy="38"  r="7"   fill="#76ff03" filter="url(#glow2)"/>
 
-          {/* Ballon — rebondit en dernier */}
+          {/* Ballon — rebondit en dernier — vrai ballon de foot */}
           <g className="c-ball" filter="url(#ballDrop)">
-            <circle cx="182" cy="186" r="40" fill="url(#gBall)"/>
-            <polygon points="182,148 193,160 189,174 175,174 171,160" fill="#111" opacity=".88"/>
-            <polygon points="182,224 171,212 175,198 189,198 193,212" fill="#222" opacity=".65"/>
-            <polygon points="144,186 156,177 170,181 170,191 156,195" fill="#222" opacity=".65"/>
-            <polygon points="220,186 208,195 194,191 194,181 208,177" fill="#222" opacity=".65"/>
-            <polygon points="158,156 165,167 161,178 150,175 147,162" fill="#1a1a1a" opacity=".5"/>
-            <polygon points="206,156 218,162 216,175 205,178 199,167" fill="#1a1a1a" opacity=".5"/>
-            <ellipse cx="168" cy="163" rx="11" ry="7" fill="white" opacity=".35" transform="rotate(-30,168,163)"/>
+            {/* Corps blanc du ballon */}
+            <circle cx="182" cy="186" r="42" fill="url(#gBall)" stroke="#cccccc" strokeWidth=".5"/>
+
+            {/* Pentagone central noir */}
+            <polygon
+              points="182,162 196,172 191,188 173,188 168,172"
+              fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+
+            {/* 5 pentagones autour — disposition réelle d'un ballon */}
+            {/* haut-gauche */}
+            <polygon points="163,157 168,172 155,180 145,170 149,156" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+            {/* haut-droite */}
+            <polygon points="201,157 215,156 219,170 209,180 196,172" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+            {/* bas-droite */}
+            <polygon points="209,200 219,214 208,223 196,217 191,202" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+            {/* bas */}
+            <polygon points="182,210 191,202 196,217 182,224 168,217 173,202" fill="#1a1a1a" stroke="#000" strokeWidth=".5" opacity=".9"/>
+            {/* bas-gauche */}
+            <polygon points="155,200 173,202 168,217 156,223 145,214" fill="#1a1a1a" stroke="#000" strokeWidth=".5"/>
+
+            {/* Lignes blanches entre pentagones */}
+            <line x1="182" y1="162" x2="182" y2="144" stroke="white" strokeWidth="1" opacity=".15"/>
+            <line x1="168" y1="172" x2="155" y2="180" stroke="white" strokeWidth="1" opacity=".15"/>
+            <line x1="196" y1="172" x2="209" y2="180" stroke="white" strokeWidth="1" opacity=".15"/>
+
+            {/* Reflet lumineux */}
+            <ellipse cx="168" cy="160" rx="12" ry="8"
+              fill="white" opacity=".4" transform="rotate(-35,168,160)"/>
+            <ellipse cx="172" cy="163" rx="5" ry="3"
+              fill="white" opacity=".6" transform="rotate(-35,172,163)"/>
           </g>
         </svg>
 
@@ -1571,31 +1617,31 @@ function SplashScreen({ userName }) {
       {/* Salutation + slogan */}
       <div className="c-slogan" style={{textAlign:"center", marginTop:10}}>
         <div style={{color:"#8b949e", fontSize:13, fontWeight:600, letterSpacing:2, textTransform:"uppercase", marginBottom:5}}>
-          {timeGreet}{userName ? `, ${userName}` : ""} 👋
+          {timeGreet}
         </div>
         <div style={{color:"#8b949e", fontSize:10, letterSpacing:3, textTransform:"uppercase"}}>
           Statistiques · Analyses · Performance
         </div>
       </div>
 
-      {/* Barre de chargement */}
+      {/* Barre de chargement — apparaît à 6.5s, se remplit en 2s */}
       <div style={{
         width:180, height:3, background:"#1a2a1a", borderRadius:2,
         marginTop:24, overflow:"hidden",
-        animation:"fadeIn .4s 4.8s ease forwards", opacity:0
+        animation:"fadeIn .4s 6.5s ease forwards", opacity:0
       }}>
         <div style={{
           height:"100%", borderRadius:2,
           background:"linear-gradient(90deg,#1de9b6,#76ff03,#1de9b6)",
-          animation:"loadBar 1.8s 5s ease forwards", width:0
+          animation:"loadBar 2s 6.7s ease forwards", width:0
         }}/>
       </div>
 
-      {/* oddrix.fr */}
+      {/* oddrix.fr — apparaît à 7s */}
       <div style={{
         position:"absolute", bottom:30,
-        color:"#ffffff12", fontSize:10, letterSpacing:3, textTransform:"uppercase",
-        animation:"fadeIn .4s 5.5s ease forwards", opacity:0
+        color:"#ffffff18", fontSize:10, letterSpacing:3, textTransform:"uppercase",
+        animation:"fadeIn .4s 7s ease forwards", opacity:0
       }}>oddrix.fr</div>
     </div>
   );
@@ -2499,6 +2545,7 @@ export default function App() {
   const [user, setUser]         = useState(null);
   const [screen, setScreen]     = useState("loading");
   const [showSplash, setShowSplash] = useState(false);
+  const [isNewUser, setIsNewUser]   = useState(false);
   const [tab, setTab]           = useState(0);
   const [bets, setBets]         = useState([]);
   const [showAdd, setShowAdd]   = useState(false);
@@ -2510,13 +2557,19 @@ export default function App() {
     const trialEnd = new Date(u.trialEnd);
     const now = new Date();
     const hasAccess = u.subscribed || trialEnd > now;
-    if (isNew) { setScreen("onboarding"); return; }
-    // Afficher le splash de bienvenue
+
+    // Toujours afficher le splash — inscription ou connexion
+    setIsNewUser(isNew);
     setShowSplash(true);
     setTimeout(() => {
       setShowSplash(false);
-      setScreen(hasAccess ? "app" : "paywall");
-    }, 7000);
+      if (isNew) {
+        // Après le splash → onboarding pour les nouveaux
+        setScreen("onboarding");
+      } else {
+        setScreen(hasAccess ? "app" : "paywall");
+      }
+    }, 11000);
   };
 
   // ── Vérifier session au démarrage
@@ -2579,7 +2632,7 @@ export default function App() {
   ];
 
   if (screen==="loading")    return <div style={{ background:"#0d1117", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><LogoSVG size={80}/></div>;
-  if (showSplash)            return <SplashScreen userName={user?.name}/>;
+  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser}/>;
   if (screen==="onboarding") return <Onboarding onDone={()=>{ const trialEnd=new Date(user.trialEnd); setScreen(user.subscribed||trialEnd>new Date()?"app":"paywall"); }}/>;
   if (screen==="auth")       return <AuthScreen onAuth={handleAuth}/>;
   if (screen==="paywall")    return <PaywallScreen user={user} onSubscribe={handleSubscribe} onLogout={handleLogout}/>;
