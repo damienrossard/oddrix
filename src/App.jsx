@@ -16,7 +16,7 @@ import {
 
 // ── Configuration Firebase ────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:            "AIzaSyCwj1YqRFNTGG9-MLHq3yvpoG1jo9xB15o",
+  apiKey:            "AIzaSyCwj1YqRFNTGG9-MlHq3yvpoG1jo9xB15o",
   authDomain:        "oddrix.firebaseapp.com",
   projectId:         "oddrix",
   storageBucket:     "oddrix.firebasestorage.app",
