@@ -285,7 +285,487 @@ function Dashboard({ bets, onAddBet }) {
 
 // ── ONGLET 1 : Statistiques ───────────────────────────────────────────────
 function Statistics({ bets }) {
-  const s = calcStats(bets);
+  const now        = new Date();
+  const thisYear   = now.getFullYear();
+  const lastYear   = thisYear - 1;
+  const thisMonth  = now.getMonth(); // 0-indexed
+  const lastMonth  = thisMonth === 0 ? 11 : thisMonth - 1;
+  const lastMonthYear = thisMonth === 0 ? lastYear : thisYear;
+
+  const MONTHS = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+  const MONTHS_FULL = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+  // ── Modes de filtre
+  const [mode, setMode] = useState("mois_en_cours"); 
+  // mois_en_cours | mois_precedent | mois_choisi | annee_en_cours | annee_precedente | comparaison_mois | comparaison_annee
+  const [selectedMonth, setSelectedMonth] = useState(thisMonth);
+
+  // ── Filtres de paris selon le mode
+  const filterBets = (m) => {
+    switch(m) {
+      case "mois_en_cours":
+        return bets.filter(b => {
+          const d = new Date(b.date);
+          return d.getFullYear()===thisYear && d.getMonth()===thisMonth;
+        });
+      case "mois_precedent":
+        return bets.filter(b => {
+          const d = new Date(b.date);
+          return d.getFullYear()===lastMonthYear && d.getMonth()===lastMonth;
+        });
+      case "mois_choisi":
+        return bets.filter(b => {
+          const d = new Date(b.date);
+          return d.getFullYear()===thisYear && d.getMonth()===selectedMonth;
+        });
+      case "annee_en_cours":
+        return bets.filter(b => new Date(b.date).getFullYear()===thisYear);
+      case "annee_precedente":
+        return bets.filter(b => new Date(b.date).getFullYear()===lastYear);
+      default:
+        return bets;
+    }
+  };
+
+  const filteredBets = filterBets(mode);
+  const s = calcStats(filteredBets);
+
+  // Pour les comparaisons
+  const betsThisMonth = filterBets("mois_en_cours");
+  const betsLastMonth = filterBets("mois_precedent");
+  const betsThisYear  = filterBets("annee_en_cours");
+  const betsLastYear  = filterBets("annee_precedente");
+  const sThisMonth    = calcStats(betsThisMonth);
+  const sLastMonth    = calcStats(betsLastMonth);
+  const sThisYear     = calcStats(betsThisYear);
+  const sLastYear     = calcStats(betsLastYear);
+
+  // Label de la période sélectionnée
+  const periodLabel = () => {
+    switch(mode) {
+      case "mois_en_cours":    return `${MONTHS_FULL[thisMonth]} ${thisYear}`;
+      case "mois_precedent":   return `${MONTHS_FULL[lastMonth]} ${lastMonthYear}`;
+      case "mois_choisi":      return `${MONTHS_FULL[selectedMonth]} ${thisYear}`;
+      case "annee_en_cours":   return `Année ${thisYear}`;
+      case "annee_precedente": return `Année ${lastYear}`;
+      case "comparaison_mois": return `Comparaison mensuelle`;
+      case "comparaison_annee":return `Comparaison annuelle`;
+      default: return "Toutes périodes";
+    }
+  };
+
+  const isComparison = mode === "comparaison_mois" || mode === "comparaison_annee";
+
+  // ── Données graphiques pour la période filtrée
+  const sportData = SPORTS.map(sp => {
+    const sb = filteredBets.filter(b=>b.sport===sp);
+    return { name:sp, roi:parseFloat(calcStats(sb).roi.toFixed(1)), paris:sb.length };
+  }).filter(d=>d.paris>0);
+
+  const bookData = BOOKMAKERS.map(bk => {
+    const bb = filteredBets.filter(b=>b.bookmaker===bk);
+    return { name:bk, roi:parseFloat(calcStats(bb).roi.toFixed(1)), paris:bb.length };
+  }).filter(d=>d.paris>0);
+
+  const typeData = TYPES.map(t => {
+    const tb = filteredBets.filter(b=>b.type===t);
+    return { name:t, roi:parseFloat(calcStats(tb).roi.toFixed(1)), paris:tb.length };
+  }).filter(d=>d.paris>0);
+
+  const coteRanges = [
+    { label:"<1.5",  min:0,   max:1.5  },
+    { label:"1.5-2", min:1.5, max:2    },
+    { label:"2-2.5", min:2,   max:2.5  },
+    { label:"2.5-3", min:2.5, max:3    },
+    { label:">3",    min:3,   max:999  },
+  ].map(r => {
+    const rb = filteredBets.filter(b=>b.cote>=r.min && b.cote<r.max);
+    return { name:r.label, taux:parseFloat(calcStats(rb).tauxReussite.toFixed(1)), paris:rb.length };
+  }).filter(d=>d.paris>0);
+
+  const jours = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+  const jourData = jours.map((j,i) => {
+    const jb = filteredBets.filter(b=>new Date(b.date).getDay()===i);
+    return { name:j, roi:parseFloat(calcStats(jb).roi.toFixed(1)), paris:jb.length };
+  });
+
+  // Données comparaison mois
+  const compMoisData = [
+    { name:MONTHS[lastMonth], benefice:parseFloat(sLastMonth.benefice.toFixed(1)), roi:parseFloat(sLastMonth.roi.toFixed(1)), taux:parseFloat(sLastMonth.tauxReussite.toFixed(1)), paris:sLastMonth.total },
+    { name:MONTHS[thisMonth], benefice:parseFloat(sThisMonth.benefice.toFixed(1)), roi:parseFloat(sThisMonth.roi.toFixed(1)), taux:parseFloat(sThisMonth.tauxReussite.toFixed(1)), paris:sThisMonth.total },
+  ];
+
+  // Données comparaison année
+  const compAnneeData = [
+    { name:`${lastYear}`, benefice:parseFloat(sLastYear.benefice.toFixed(1)), roi:parseFloat(sLastYear.roi.toFixed(1)), taux:parseFloat(sLastYear.tauxReussite.toFixed(1)), paris:sLastYear.total },
+    { name:`${thisYear}`, benefice:parseFloat(sThisYear.benefice.toFixed(1)), roi:parseFloat(sThisYear.roi.toFixed(1)), taux:parseFloat(sThisYear.tauxReussite.toFixed(1)), paris:sThisYear.total },
+  ];
+
+  // Évolution mensuelle pour l'année en cours
+  const monthlyEvol = MONTHS.map((m, i) => {
+    const mb = betsThisYear.filter(b => new Date(b.date).getMonth()===i);
+    const ms = calcStats(mb);
+    return { name:m, benefice:parseFloat(ms.benefice.toFixed(1)), paris:mb.length };
+  });
+
+  const DiffBadge = ({ val, suffix="€" }) => (
+    <span style={{
+      background: val>=0?`${COLORS.green}22`:`${COLORS.red}22`,
+      color: val>=0?COLORS.green:COLORS.red,
+      border:`1px solid ${val>=0?COLORS.green:COLORS.red}44`,
+      borderRadius:8, padding:"2px 8px", fontSize:11, fontWeight:700
+    }}>
+      {val>=0?"+":""}{val}{suffix}
+    </span>
+  );
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+
+      {/* ── SÉLECTEUR DE PÉRIODE ── */}
+      <Card>
+        <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📅 Période analysée</div>
+
+        {/* Ligne 1 : modes principaux */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+          {[
+            { id:"mois_en_cours",    label:`${MONTHS[thisMonth]} ${thisYear}`,  icon:"📌" },
+            { id:"mois_precedent",   label:`${MONTHS[lastMonth]} (préc.)`,      icon:"◀️" },
+            { id:"annee_en_cours",   label:`Année ${thisYear}`,                  icon:"📆" },
+            { id:"annee_precedente", label:`Année ${lastYear}`,                  icon:"🗓" },
+          ].map(opt=>(
+            <button key={opt.id} onClick={()=>setMode(opt.id)} style={{
+              background: mode===opt.id?`${COLORS.green}22`:"transparent",
+              border:`1.5px solid ${mode===opt.id?COLORS.green:COLORS.border}`,
+              borderRadius:10, padding:"10px 8px", cursor:"pointer", textAlign:"center"
+            }}>
+              <div style={{ fontSize:16 }}>{opt.icon}</div>
+              <div style={{ color:mode===opt.id?COLORS.green:COLORS.text, fontSize:11, fontWeight:600, marginTop:3 }}>{opt.label}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Ligne 2 : comparaisons */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+          {[
+            { id:"comparaison_mois",  label:"Mois vs mois préc.", icon:"📊" },
+            { id:"comparaison_annee", label:`${lastYear} vs ${thisYear}`,      icon:"📈" },
+          ].map(opt=>(
+            <button key={opt.id} onClick={()=>setMode(opt.id)} style={{
+              background: mode===opt.id?`${COLORS.purple}22`:"transparent",
+              border:`1.5px solid ${mode===opt.id?COLORS.purple:COLORS.border}`,
+              borderRadius:10, padding:"10px 8px", cursor:"pointer", textAlign:"center"
+            }}>
+              <div style={{ fontSize:16 }}>{opt.icon}</div>
+              <div style={{ color:mode===opt.id?COLORS.purple:COLORS.text, fontSize:11, fontWeight:600, marginTop:3 }}>{opt.label}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Sélecteur de mois spécifique */}
+        <div style={{ marginTop:4 }}>
+          <div style={{ color:COLORS.muted, fontSize:11, marginBottom:6 }}>Choisir un mois de {thisYear} :</div>
+          <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+            {MONTHS.map((m,i)=>(
+              <button key={i} onClick={()=>{setMode("mois_choisi"); setSelectedMonth(i);}} style={{
+                background: mode==="mois_choisi"&&selectedMonth===i?`${COLORS.teal}22`:"transparent",
+                border:`1px solid ${mode==="mois_choisi"&&selectedMonth===i?COLORS.teal:COLORS.border}`,
+                borderRadius:6, padding:"4px 7px",
+                color: mode==="mois_choisi"&&selectedMonth===i?COLORS.teal:COLORS.muted,
+                fontSize:11, fontWeight:600, cursor:"pointer"
+              }}>{m}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Label période active */}
+        <div style={{ marginTop:10, padding:"8px 12px", background:COLORS.card2, borderRadius:8, display:"flex", justifyContent:"space-between" }}>
+          <span style={{ color:COLORS.muted, fontSize:12 }}>Période :</span>
+          <span style={{ color:COLORS.green, fontWeight:700, fontSize:12 }}>{periodLabel()}</span>
+        </div>
+      </Card>
+
+      {/* ══════════════════════════════════════
+          VUE COMPARAISON MOIS
+      ══════════════════════════════════════ */}
+      {mode==="comparaison_mois" && (
+        <>
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:14 }}>
+              📊 {MONTHS_FULL[lastMonth]} → {MONTHS_FULL[thisMonth]}
+            </div>
+            {[
+              { label:"Bénéfice", prev:sLastMonth.benefice, curr:sThisMonth.benefice, suffix:"€", fmt:(v)=>`${v>=0?"+":""}${v.toFixed(1)}€` },
+              { label:"ROI",      prev:sLastMonth.roi,      curr:sThisMonth.roi,      suffix:"%", fmt:(v)=>`${v>=0?"+":""}${v.toFixed(1)}%` },
+              { label:"Réussite", prev:sLastMonth.tauxReussite, curr:sThisMonth.tauxReussite, suffix:"%", fmt:(v)=>`${v.toFixed(1)}%` },
+              { label:"Paris",    prev:sLastMonth.total,    curr:sThisMonth.total,    suffix:"", fmt:(v)=>`${v}` },
+            ].map((row,i)=>{
+              const diff = row.curr - row.prev;
+              return (
+                <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10, alignItems:"center" }}>
+                  <div style={{ color:COLORS.muted, fontSize:12 }}>{row.label}</div>
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>{MONTHS[lastMonth]}</div>
+                    <div style={{ color:COLORS.text, fontWeight:700 }}>{row.fmt(row.prev)}</div>
+                  </div>
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>{MONTHS[thisMonth]}</div>
+                    <div style={{ color:diff>=0?COLORS.green:COLORS.red, fontWeight:700 }}>{row.fmt(row.curr)}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Flèche évolution globale */}
+            <div style={{ marginTop:12, background:COLORS.card2, borderRadius:10, padding:12, textAlign:"center" }}>
+              <div style={{ color:COLORS.muted, fontSize:11, marginBottom:4 }}>Évolution bénéfice</div>
+              <div style={{ fontSize:24, fontWeight:900, color:sThisMonth.benefice-sLastMonth.benefice>=0?COLORS.green:COLORS.red }}>
+                {sThisMonth.benefice-sLastMonth.benefice>=0?"▲":"▼"} {Math.abs(sThisMonth.benefice-sLastMonth.benefice).toFixed(1)} €
+              </div>
+            </div>
+          </Card>
+
+          {/* Graphique comparaison */}
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>Bénéfice comparé</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={compMoisData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:11}}/>
+                <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                <Bar dataKey="benefice" radius={[6,6,0,0]}>
+                  {compMoisData.map((e,i)=><Cell key={i} fill={i===1?COLORS.green:COLORS.muted}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>ROI comparé</div>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={compMoisData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:11}}/>
+                <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                <Bar dataKey="roi" radius={[6,6,0,0]}>
+                  {compMoisData.map((e,i)=><Cell key={i} fill={e.roi>=0?(i===1?COLORS.teal:COLORS.muted):COLORS.red}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════
+          VUE COMPARAISON ANNÉE
+      ══════════════════════════════════════ */}
+      {mode==="comparaison_annee" && (
+        <>
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:14 }}>
+              📈 {lastYear} → {thisYear}
+            </div>
+            {[
+              { label:"Bénéfice", prev:sLastYear.benefice, curr:sThisYear.benefice, fmt:(v)=>`${v>=0?"+":""}${v.toFixed(1)}€` },
+              { label:"ROI",      prev:sLastYear.roi,      curr:sThisYear.roi,      fmt:(v)=>`${v>=0?"+":""}${v.toFixed(1)}%` },
+              { label:"Réussite", prev:sLastYear.tauxReussite, curr:sThisYear.tauxReussite, fmt:(v)=>`${v.toFixed(1)}%` },
+              { label:"Paris",    prev:sLastYear.total,    curr:sThisYear.total,    fmt:(v)=>`${v}` },
+              { label:"Total misé", prev:sLastYear.totalMise, curr:sThisYear.totalMise, fmt:(v)=>`${v}€` },
+            ].map((row,i)=>{
+              const diff = row.curr - row.prev;
+              return (
+                <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10, alignItems:"center" }}>
+                  <div style={{ color:COLORS.muted, fontSize:12 }}>{row.label}</div>
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>{lastYear}</div>
+                    <div style={{ color:COLORS.text, fontWeight:700, fontSize:13 }}>{row.fmt(row.prev)}</div>
+                  </div>
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>{thisYear}</div>
+                    <div style={{ color:diff>=0?COLORS.green:COLORS.red, fontWeight:700, fontSize:13 }}>{row.fmt(row.curr)}</div>
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ marginTop:12, background:COLORS.card2, borderRadius:10, padding:12, textAlign:"center" }}>
+              <div style={{ color:COLORS.muted, fontSize:11, marginBottom:4 }}>Progression annuelle</div>
+              <div style={{ fontSize:24, fontWeight:900, color:sThisYear.benefice-sLastYear.benefice>=0?COLORS.green:COLORS.red }}>
+                {sThisYear.benefice-sLastYear.benefice>=0?"▲":"▼"} {Math.abs(sThisYear.benefice-sLastYear.benefice).toFixed(1)} €
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>Bénéfice {lastYear} vs {thisYear}</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={compAnneeData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:12}}/>
+                <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                <Bar dataKey="benefice" radius={[6,6,0,0]}>
+                  {compAnneeData.map((e,i)=><Cell key={i} fill={e.benefice>=0?(i===1?COLORS.green:COLORS.muted):COLORS.red}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {/* Évolution mois par mois de l'année en cours */}
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📅 Mois par mois {thisYear}</div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={monthlyEvol.filter(m=>m.paris>0)}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:10}}/>
+                <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                <Bar dataKey="benefice" radius={[4,4,0,0]}>
+                  {monthlyEvol.filter(m=>m.paris>0).map((e,i)=><Cell key={i} fill={e.benefice>=0?COLORS.teal:COLORS.red}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </>
+      )}
+
+      {/* ══════════════════════════════════════
+          VUE STATS STANDARD (tous autres modes)
+      ══════════════════════════════════════ */}
+      {!isComparison && (
+        <>
+          {/* Mini stats période */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            <StatCard label="PARIS" value={`${s.won}/${s.total}`} sub={`${s.tauxReussite.toFixed(1)}% réussite`} icon="✅" color={COLORS.green}/>
+            <StatCard label="BÉNÉFICE" value={`${s.benefice>=0?"+":""}${s.benefice.toFixed(0)}€`} sub={`ROI: ${s.roi.toFixed(1)}%`} icon="💰" color={s.benefice>=0?COLORS.green:COLORS.red}/>
+            <StatCard label="MISE TOTALE" value={`${s.totalMise}€`} sub={`Cote moy. ${s.coteMoy.toFixed(2)}`} icon="📊" color={COLORS.amber}/>
+            <StatCard label="RÉUSSITE" value={`${s.tauxReussite.toFixed(1)}%`} sub={`${s.total} paris`} icon="🎯" color={COLORS.teal}/>
+          </div>
+
+          {/* Évolution mensuelle si vue annuelle */}
+          {(mode==="annee_en_cours"||mode==="annee_precedente") && (
+            <Card>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>
+                📅 Bénéfice mois par mois — {mode==="annee_en_cours"?thisYear:lastYear}
+              </div>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={(() => {
+                  const yr = mode==="annee_en_cours"?thisYear:lastYear;
+                  return MONTHS.map((m,i)=>{
+                    const mb = filteredBets.filter(b=>new Date(b.date).getMonth()===i);
+                    return { name:m, benefice:parseFloat(calcStats(mb).benefice.toFixed(1)), paris:mb.length };
+                  }).filter(d=>d.paris>0);
+                })()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                  <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:10}}/>
+                  <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                  <Bar dataKey="benefice" radius={[4,4,0,0]}>
+                    {MONTHS.map((_,i)=><Cell key={i} fill={COLORS.teal}/>)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
+
+          {/* ROI par sport */}
+          {sportData.length>0 && (
+            <Card>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🏆 ROI par sport</div>
+              <ResponsiveContainer width="100%" height={Math.max(140,sportData.length*38)}>
+                <BarChart data={sportData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                  <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
+                  <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:11}} width={75}/>
+                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                  <Bar dataKey="roi" radius={[0,6,6,0]}>
+                    {sportData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.green:COLORS.red}/>)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
+
+          {/* ROI par bookmaker */}
+          {bookData.length>0 && (
+            <Card>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🏦 ROI par bookmaker</div>
+              <ResponsiveContainer width="100%" height={Math.max(130,bookData.length*36)}>
+                <BarChart data={bookData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                  <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
+                  <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:11}} width={75}/>
+                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                  <Bar dataKey="roi" radius={[0,6,6,0]}>
+                    {bookData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.teal:COLORS.red}/>)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
+
+          {/* ROI par type */}
+          {typeData.length>0 && (
+            <Card>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🎰 ROI par type</div>
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart data={typeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                  <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:11}}/>
+                  <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                  <Bar dataKey="roi" radius={[4,4,0,0]}>
+                    {typeData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.amber:COLORS.red}/>)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
+
+          {/* Réussite par cote */}
+          {coteRanges.length>0 && (
+            <Card>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🎯 Réussite par cote</div>
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart data={coteRanges}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                  <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:11}}/>
+                  <YAxis tick={{fill:COLORS.muted,fontSize:10}} domain={[0,100]}/>
+                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                  <Bar dataKey="taux" fill={COLORS.purple} radius={[4,4,0,0]}/>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
+
+          {/* Performance par jour */}
+          <Card>
+            <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📅 Performance par jour</div>
+            <ResponsiveContainer width="100%" height={130}>
+              <BarChart data={jourData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                <XAxis dataKey="name" tick={{fill:COLORS.muted,fontSize:11}}/>
+                <YAxis tick={{fill:COLORS.muted,fontSize:10}}/>
+                <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                <Bar dataKey="roi" radius={[4,4,0,0]}>
+                  {jourData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.blue:COLORS.red}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {filteredBets.length === 0 && (
+            <Card>
+              <div style={{ textAlign:"center", padding:"20px 0", color:COLORS.muted }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>📭</div>
+                <div>Aucun pari sur cette période</div>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
   const sportPie = SPORTS.map(sp => ({ name:sp, value:bets.filter(b=>b.sport===sp).length })).filter(d=>d.value>0);
   const livePre  = [
@@ -1134,7 +1614,7 @@ function Help({ user }) {
             <div style={{ background:COLORS.card2, borderRadius:8, padding:"10px 14px", marginBottom:14, display:"flex", gap:10, alignItems:"center" }}>
               <span style={{ fontSize:16 }}>👤</span>
               <div style={{ fontSize:12, color:COLORS.muted }}>
-                Envoyé en tant que <span style={{color:COLORS.text, fontWeight:600}}>@{user?.pseudo || "Anonyme"}</span> — réponse à <span style={{color:COLORS.text, fontWeight:600}}>{user?.email || "—"}</span>
+                Envoyé en tant que <span style={{color:COLORS.text, fontWeight:600}}>@{user?.pseudo || "Anonyme"}</span> — réponse à <span style={{color:COLORS.green, fontWeight:600}}>support@oddrix.fr</span>
               </div>
             </div>
 
