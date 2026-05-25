@@ -4,6 +4,30 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, sendPasswordResetEmail
+} from "firebase/auth";
+import {
+  getFirestore, doc, setDoc, getDoc, updateDoc, collection,
+  getDocs, query, orderBy, limit
+} from "firebase/firestore";
+
+// ── Configuration Firebase ────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyCwj1YqRFNTGG9-MLHq3yvpoG1jo9xB15o",
+  authDomain:        "oddrix.firebaseapp.com",
+  projectId:         "oddrix",
+  storageBucket:     "oddrix.firebasestorage.app",
+  messagingSenderId: "408319053899",
+  appId:             "1:408319053899:web:5b85f3a2864a6b69b2bdce",
+  measurementId:     "G-MMJ4SG70EZ"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth        = getAuth(firebaseApp);
+const db          = getFirestore(firebaseApp);
 
 // ── Données de démonstration ──────────────────────────────────────────────
 const DEMO_BETS = [
@@ -1755,22 +1779,16 @@ function ForgotPasswordModal({ onClose }) {
   const [step, setStep]     = useState("form"); // form | sent
   const [error, setError]   = useState("");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setError("");
     if (!email.includes("@")) { setError("Email invalide."); return; }
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-    // En prod: envoi d'un vrai email via Firebase. Ici on simule.
-    const user = users.find(u=>u.email===email);
-    if (!user) { setError("Aucun compte avec cet email."); return; }
-    // Génère un token temporaire
-    const token = Math.random().toString(36).slice(2,10).toUpperCase();
-    user.resetToken = token;
-    user.resetExpiry = Date.now() + 15*60*1000;
-    const idx = users.findIndex(u=>u.email===email);
-    users[idx] = user;
-    localStorage.setItem("sb_users", JSON.stringify(users));
-    console.log(`[DEV] Token de réinitialisation pour ${email}: ${token}`);
-    setStep("sent");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setStep("sent");
+    } catch(e) {
+      if (e.code === "auth/user-not-found") setError("Aucun compte avec cet email.");
+      else setError("Erreur lors de l'envoi. Réessayez.");
+    }
   };
 
   const inputStyle = { width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:10, padding:"14px", color:COLORS.text, fontSize:15, fontFamily:"inherit", boxSizing:"border-box" };
@@ -1888,13 +1906,20 @@ function DeleteAccountModal({ user, onDeleted, onClose }) {
   const [confirm, setConfirm] = useState("");
   const [error, setError]     = useState("");
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm !== "SUPPRIMER") { setError('Tapez exactement "SUPPRIMER" pour confirmer.'); return; }
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-    const filtered = users.filter(u=>u.id!==user.id);
-    localStorage.setItem("sb_users", JSON.stringify(filtered));
-    localStorage.removeItem("sb_session");
-    onDeleted();
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) await currentUser.delete();
+      await signOut(auth);
+      onDeleted();
+    } catch(e) {
+      if (e.code === "auth/requires-recent-login") {
+        setError("Pour des raisons de sécurité, reconnectez-vous avant de supprimer votre compte.");
+      } else {
+        setError("Erreur lors de la suppression. Réessayez.");
+      }
+    }
   };
 
   return (
@@ -2297,18 +2322,18 @@ function AuthScreen({ onAuth }) {
     setPromoValid(promo || false);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
     if (!email || !password) { setError("Veuillez remplir tous les champs."); return; }
     if (!email.includes("@")) { setError("Adresse email invalide."); return; }
     if (password.length < 6) { setError("Mot de passe minimum 6 caractères."); return; }
+
     if (mode==="register") {
       if (!name.trim())   { setError("Veuillez entrer votre prénom."); return; }
       if (!pseudo.trim()) { setError("Veuillez choisir un pseudo."); return; }
       if (pseudo.trim().length < 3) { setError("Le pseudo doit faire au moins 3 caractères."); return; }
       if (/\s/.test(pseudo.trim())) { setError("Le pseudo ne peut pas contenir d'espaces."); return; }
       if (!birthDay || !birthMonth || !birthYear) { setError("Veuillez renseigner votre date de naissance."); return; }
-      // Vérification majorité 18 ans
       const birth = new Date(`${birthYear}-${birthMonth}-${birthDay}`);
       const today = new Date();
       const age = today.getFullYear() - birth.getFullYear() - (
@@ -2316,58 +2341,50 @@ function AuthScreen({ onAuth }) {
       );
       if (isNaN(birth.getTime())) { setError("Date de naissance invalide."); return; }
       if (age < 18) { setError("Vous devez avoir 18 ans ou plus pour vous inscrire."); return; }
-    }
 
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
+      try {
+        // Créer le compte Firebase Auth
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid  = cred.user.uid;
 
-    if (mode==="register") {
-      if (users.find(u=>u.email===email)) { setError("Cet email est déjà utilisé."); return; }
-      if (users.find(u=>u.pseudo?.toLowerCase()===pseudo.trim().toLowerCase())) { setError("Ce pseudo est déjà pris, choisissez-en un autre."); return; }
+        const isAdmin     = email === ADMIN_EMAIL;
+        const promoApplied = promoValid && promoValid !== false ? promoValid : null;
+        const totalDays   = 7 + (promoApplied ? promoApplied.extraDays : 0);
 
-      const isAdmin = email === ADMIN_EMAIL;
-      const promoApplied = promoValid && promoValid !== false ? promoValid : null;
-      const totalDays = 7 + (promoApplied ? promoApplied.extraDays : 0);
-      const newUser = {
-        id: Date.now(),
-        name: name.trim(),
-        pseudo: pseudo.trim(),
-        email,
-        password,
-        birthDate: `${birthYear}-${birthMonth}-${birthDay}`,
-        createdAt: new Date().toISOString(),
-        trialEnd: new Date(Date.now() + totalDays*24*60*60*1000).toISOString(),
-        subscribed: isAdmin,
-        isAdmin,
-        plan: isAdmin ? "admin" : null,
-        promoCode: promoApplied ? promoCode.trim().toUpperCase() : null,
-        promoLabel: promoApplied ? promoApplied.label : null,
-        bets: [],
-        bankroll: 500,
-        transactions: [{ type:"Dépôt", montant:500, date:new Date().toISOString().slice(0,10) }],
-      };
-      users.push(newUser);
-      localStorage.setItem("sb_users", JSON.stringify(users));
-      localStorage.setItem("sb_session", JSON.stringify({ id:newUser.id, email:newUser.email }));
-      onAuth(newUser, true); // true = nouveau compte → onboarding
-    } else {
-      // Connexion admin spéciale
-      if (email===ADMIN_EMAIL) {
-        const adminUser = users.find(u=>u.email===ADMIN_EMAIL);
-        if (!adminUser || adminUser.password!==password) { setError("Email ou mot de passe incorrect."); return; }
-        // S'assurer que l'admin est toujours Premium
-        adminUser.subscribed = true;
-        adminUser.isAdmin = true;
-        const idx = users.findIndex(u=>u.email===ADMIN_EMAIL);
-        users[idx] = adminUser;
-        localStorage.setItem("sb_users", JSON.stringify(users));
-        localStorage.setItem("sb_session", JSON.stringify({ id:adminUser.id, email:adminUser.email }));
-        onAuth(adminUser);
-        return;
+        const profile = {
+          uid,
+          name:       name.trim(),
+          pseudo:     pseudo.trim(),
+          email,
+          birthDate:  `${birthYear}-${birthMonth}-${birthDay}`,
+          createdAt:  new Date().toISOString(),
+          trialEnd:   new Date(Date.now() + totalDays*24*60*60*1000).toISOString(),
+          subscribed: isAdmin,
+          isAdmin,
+          plan:       isAdmin ? "admin" : null,
+          promoCode:  promoApplied ? promoCode.trim().toUpperCase() : null,
+          promoLabel: promoApplied ? promoApplied.label : null,
+          bankroll:   500,
+          transactions: [{ type:"Dépôt", montant:500, date:new Date().toISOString().slice(0,10) }],
+        };
+
+        // Sauvegarder le profil dans Firestore
+        await setDoc(doc(db, "users", uid), profile);
+        onAuth(cred.user, true);
+      } catch(e) {
+        if (e.code === "auth/email-already-in-use") setError("Cet email est déjà utilisé.");
+        else setError("Erreur lors de l'inscription. Réessayez.");
+        console.error(e);
       }
-      const user = users.find(u=>u.email===email && u.password===password);
-      if (!user) { setError("Email ou mot de passe incorrect."); return; }
-      localStorage.setItem("sb_session", JSON.stringify({ id:user.id, email:user.email }));
-      onAuth(user);
+    } else {
+      // Connexion
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        onAuth(cred.user, false);
+      } catch(e) {
+        setError("Email ou mot de passe incorrect.");
+        console.error(e);
+      }
     }
   };
 
@@ -2605,81 +2622,103 @@ function PaywallScreen({ user, onSubscribe, onLogout }) {
 
 // ── App principale ────────────────────────────────────────────────────────
 export default function App() {
-  const [user, setUser]         = useState(null);
-  const [screen, setScreen]     = useState("loading");
+  const [user, setUser]             = useState(null);
+  const [screen, setScreen]         = useState("loading");
   const [showSplash, setShowSplash] = useState(false);
   const [isNewUser, setIsNewUser]   = useState(false);
-  const [tab, setTab]           = useState(0);
-  const [bets, setBets]         = useState([]);
-  const [showAdd, setShowAdd]   = useState(false);
+  const [tab, setTab]               = useState(0);
+  const [bets, setBets]             = useState([]);
+  const [showAdd, setShowAdd]       = useState(false);
 
-  // ── loginUser déclaré en premier car utilisé dans l'init ────────────────
-  const loginUser = (u, isNew=false) => {
-    setUser(u);
-    setBets(u.bets || []);
-    const trialEnd = new Date(u.trialEnd);
-    const now = new Date();
-    const hasAccess = u.subscribed || trialEnd > now;
+  // ── Charger le profil Firestore ──────────────────────────────────────────
+  const loadUserProfile = async (firebaseUser, isNew=false) => {
+    try {
+      const docRef  = doc(db, "users", firebaseUser.uid);
+      const docSnap = await getDoc(docRef);
+      let profile;
 
-    // Toujours afficher le splash — inscription ou connexion
-    setIsNewUser(isNew);
-    setShowSplash(true);
-    setTimeout(() => {
-      setShowSplash(false);
-      if (isNew) {
-        // Après le splash → onboarding pour les nouveaux
-        setScreen("onboarding");
+      if (docSnap.exists()) {
+        profile = docSnap.data();
       } else {
-        setScreen(hasAccess ? "app" : "paywall");
+        // Nouveau profil — créé par AuthScreen, on attend
+        setScreen("auth");
+        return;
       }
-    }, 11000);
+
+      setUser({ ...profile, uid: firebaseUser.uid });
+      // Charger les paris
+      const betsRef  = collection(db, "users", firebaseUser.uid, "bets");
+      const betsSnap = await getDocs(betsRef);
+      const userBets = betsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setBets(userBets);
+
+      const trialEnd  = new Date(profile.trialEnd);
+      const hasAccess = profile.subscribed || trialEnd > new Date();
+
+      setIsNewUser(isNew);
+      setShowSplash(true);
+      setTimeout(() => {
+        setShowSplash(false);
+        setScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
+      }, 11000);
+    } catch(e) {
+      console.error("Erreur chargement profil:", e);
+      setScreen("auth");
+    }
   };
 
-  // ── Vérifier session au démarrage
-  useEffect(()=>{
-    const session = localStorage.getItem("sb_session");
-    if (!session) { setScreen("auth"); return; }
-    try {
-      const { id } = JSON.parse(session);
-      const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-      const u = users.find(u=>u.id===id);
-      if (!u) { setScreen("auth"); return; }
-      loginUser(u);
-    } catch(e) { setScreen("auth"); }
+  // ── Écouter l'état Firebase Auth ─────────────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        await loadUserProfile(firebaseUser, false);
+      } else {
+        setScreen("auth");
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const handleAuth = (u, isNew=false) => loginUser(u, isNew);
+  const handleAuth = (u, isNew=false) => {
+    // Appelé après inscription/connexion réussie dans AuthScreen
+    loadUserProfile(u, isNew);
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("sb_session");
+  const handleLogout = async () => {
+    await signOut(auth);
     setUser(null);
+    setBets([]);
     setScreen("auth");
   };
 
-  const handleSubscribe = (plan) => {
-    // En production : redirection vers Stripe Checkout
-    // Ici simulation de l'abonnement activé
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-    const idx = users.findIndex(u=>u.id===user.id);
-    if (idx>=0) {
-      users[idx].subscribed = true;
-      users[idx].plan = plan;
-      users[idx].subscribedAt = new Date().toISOString();
-      localStorage.setItem("sb_users", JSON.stringify(users));
-      setUser(users[idx]);
-    }
-    setScreen("app");
+  const handleSubscribe = async (plan) => {
+    if (!user?.uid) return;
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        subscribed: true, plan, subscribedAt: new Date().toISOString()
+      });
+      setUser(prev => ({ ...prev, subscribed: true, plan }));
+      setScreen("app");
+    } catch(e) { console.error(e); }
   };
 
-  const saveBets = (newBets) => {
-    setBets(newBets);
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-    const idx = users.findIndex(u=>u.id===user?.id);
-    if (idx>=0) { users[idx].bets = newBets; localStorage.setItem("sb_users", JSON.stringify(users)); }
+  const addBet = async (bet) => {
+    if (!user?.uid) return;
+    try {
+      const betRef = doc(collection(db, "users", user.uid, "bets"));
+      const newBet = { ...bet, id: betRef.id };
+      await setDoc(betRef, newBet);
+      setBets(prev => [...prev, newBet]);
+    } catch(e) { console.error("Erreur ajout pari:", e); }
   };
 
-  const addBet = bet => saveBets([...bets, bet]);
-  const delBet = id  => saveBets(bets.filter(b=>b.id!==id));
+  const delBet = async (id) => {
+    if (!user?.uid) return;
+    try {
+      await setDoc(doc(db, "users", user.uid, "bets", id), { deleted: true }, { merge: true });
+      setBets(prev => prev.filter(b => b.id !== id));
+    } catch(e) { console.error("Erreur suppression pari:", e); }
+  };
 
   // Jours restants d'essai
   const trialDaysLeft = user ? Math.max(0, Math.ceil((new Date(user.trialEnd) - new Date()) / (1000*60*60*24))) : 0;
