@@ -2372,9 +2372,13 @@ function AuthScreen({ onAuth }) {
         await setDoc(doc(db, "users", uid), profile);
         onAuth(cred.user, true);
       } catch(e) {
+        console.error("Firebase error:", e.code, e.message);
         if (e.code === "auth/email-already-in-use") setError("Cet email est déjà utilisé.");
-        else setError("Erreur lors de l'inscription. Réessayez.");
-        console.error(e);
+        else if (e.code === "auth/invalid-email") setError("Adresse email invalide.");
+        else if (e.code === "auth/weak-password") setError("Mot de passe trop faible (6 caractères min.).");
+        else if (e.code === "auth/network-request-failed") setError("Erreur réseau. Vérifiez votre connexion.");
+        else if (e.code === "permission-denied") setError("Erreur de permissions Firestore. Contactez le support.");
+        else setError(`Erreur: ${e.code || e.message}`);
       }
     } else {
       // Connexion
