@@ -2028,10 +2028,21 @@ Si tu ne peux pas lire une info, mets null. Réponds uniquement avec le JSON.` }
             <div style={{ color:COLORS.muted, fontSize:12, marginTop:4 }}>L'IA lit votre ticket</div>
           </div>
         ) : (
-          <label style={{ display:"block", background:COLORS.green, color:COLORS.bg, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:800, fontSize:15, cursor:"pointer" }}>
-            📷 Photo ou capture d'écran
-            <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display:"none" }}/>
-          </label>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {/* Appareil photo */}
+            <label style={{ display:"block", background:COLORS.green, color:COLORS.bg, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:800, fontSize:15, cursor:"pointer" }}>
+              📷 Prendre une photo
+              <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display:"none" }}/>
+            </label>
+            {/* Galerie */}
+            <label style={{ display:"block", background:COLORS.card2, border:`1px solid ${COLORS.border}`, color:COLORS.text, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:700, fontSize:15, cursor:"pointer" }}>
+              🖼️ Choisir depuis la galerie
+              <input type="file" accept="image/*" onChange={handleFile} style={{ display:"none" }}/>
+            </label>
+            <div style={{ color:COLORS.muted, fontSize:12, textAlign:"center" }}>
+              Capture d'écran de votre bookmaker → galerie 📱
+            </div>
+          </div>
         )}
 
         {error && <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:8, padding:"10px", color:COLORS.red, fontSize:13, marginTop:14 }}>⚠️ {error}</div>}
