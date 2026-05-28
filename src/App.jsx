@@ -1659,10 +1659,6 @@ function Help({ user }) {
           </div>
         </div>
       </Card>
-        <p style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6 }}>
-          Les paris sportifs peuvent créer une dépendance. Si vous ressentez des difficultés, des aides gratuites sont disponibles.
-        </p>
-      </Card>
 
       {[
         { org:"Joueurs Info Service", tel:"09 74 75 13 13", desc:"Ligne nationale d'aide — 7j/7, gratuit", color:COLORS.green },
