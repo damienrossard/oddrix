@@ -2309,53 +2309,6 @@ Si tu ne peux pas lire une info, mets null. Réponds uniquement avec le JSON.` }
     b64Reader.readAsDataURL(file);
   };
 
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.9)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
-      <div style={{ background:COLORS.card, width:"100%", borderRadius:"20px 20px 0 0", padding:24 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div style={{ fontWeight:800, fontSize:17 }}>📸 Scanner un ticket</div>
-          <button onClick={onClose} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:24, cursor:"pointer" }}>✕</button>
-        </div>
-        <p style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6, marginBottom:20 }}>
-          📱 <strong style={{color:COLORS.text}}>Depuis votre bookmaker :</strong> faites une capture d'écran puis choisissez-la dans votre galerie.<br/>
-          📷 Ou photographiez directement votre ticket papier.<br/>
-          <span style={{color:COLORS.teal}}>L'IA extrait automatiquement toutes les infos.</span>
-        </p>
-
-        {preview && <img src={preview} style={{ width:"100%", borderRadius:12, marginBottom:16, maxHeight:200, objectFit:"cover" }} alt="aperçu"/>}
-
-        {loading ? (
-          <div style={{ textAlign:"center", padding:"20px 0" }}>
-            <div style={{ fontSize:36, marginBottom:8 }}>🔍</div>
-            <div style={{ color:COLORS.green, fontWeight:700 }}>Analyse en cours...</div>
-            <div style={{ color:COLORS.muted, fontSize:12, marginTop:4 }}>L'IA lit votre ticket</div>
-          </div>
-        ) : (
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {/* Appareil photo */}
-            <label style={{ display:"block", background:COLORS.green, color:COLORS.bg, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:800, fontSize:15, cursor:"pointer" }}>
-              📷 Prendre une photo
-              <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display:"none" }}/>
-            </label>
-            {/* Galerie */}
-            <label style={{ display:"block", background:COLORS.card2, border:`1px solid ${COLORS.border}`, color:COLORS.text, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:700, fontSize:15, cursor:"pointer" }}>
-              🖼️ Choisir depuis la galerie
-              <input type="file" accept="image/*" onChange={handleFile} style={{ display:"none" }}/>
-            </label>
-            <div style={{ color:COLORS.muted, fontSize:12, textAlign:"center" }}>
-              Capture d'écran de votre bookmaker → galerie 📱
-            </div>
-          </div>
-        )}
-
-        {error && <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:8, padding:"10px", color:COLORS.red, fontSize:13, marginTop:14 }}>⚠️ {error}</div>}
-        <p style={{ color:COLORS.muted, fontSize:11, textAlign:"center", marginTop:14, lineHeight:1.5 }}>
-          💡 Vérifiez toujours les données extraites avant d'enregistrer
-        </p>
-      </div>
-    </div>
-  );
-}
 
 // ── Modal CGV ─────────────────────────────────────────────────────────────
 function CGVModal({ onClose }) {
