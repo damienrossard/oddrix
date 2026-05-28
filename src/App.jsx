@@ -45,9 +45,26 @@ const DEMO_BETS = [
   { id:12, date:"2024-02-18", sport:"Football",   bookmaker:"Betclic",  type:"Simple",  marche:"Handicap",       sousMarche:"Handicap -1",             cote:1.70, mise:30,  resultat:"gagné",  gain:51,   live:false },
 ];
 
-const BOOKMAKERS = ["Betclic","Unibet","Winamax","PMU","Bwin"];
-const SPORTS     = ["Football","Tennis","Basketball","MMA","Rugby","Hockey"];
+const BOOKMAKERS = ["Betclic","Unibet","Winamax","PMU","Bwin","Vbet","Parions Sport"];
+const SPORTS     = ["Football","Tennis","Basketball","MMA","Rugby","Hockey","Volleyball","Baseball"];
 const TYPES      = ["Simple","Combiné","Système"];
+
+const PAYS_CHAMPIONNATS = {
+  "France":       ["Ligue 1","Ligue 2","Coupe de France"],
+  "Angleterre":   ["Premier League","Championship","FA Cup"],
+  "Espagne":      ["La Liga","Segunda División","Copa del Rey"],
+  "Allemagne":    ["Bundesliga","2. Bundesliga","DFB-Pokal"],
+  "Italie":       ["Serie A","Serie B","Coppa Italia"],
+  "Portugal":     ["Primeira Liga","Liga Portugal 2"],
+  "Pays-Bas":     ["Eredivisie"],
+  "Belgique":     ["Pro League"],
+  "Europe":       ["Champions League","Europa League","Conference League"],
+  "Monde":        ["Coupe du Monde","Nations League"],
+  "USA":          ["NBA","NFL","MLB","MLS","NHL"],
+  "Tennis":       ["Roland Garros","Wimbledon","US Open","Australian Open","ATP Masters"],
+  "MMA":          ["UFC","Bellator"],
+  "Autre":        ["Autre"],
+};
 
 const MARCHES = {
   "Résultat match":     ["Victoire domicile","Nul","Victoire extérieur","Double chance 1X","Double chance X2","Double chance 12"],
@@ -709,21 +726,63 @@ function Statistics({ bets }) {
             </Card>
           )}
 
-          {/* ROI par bookmaker */}
+          {/* Stats détaillées par bookmaker */}
           {bookData.length>0 && (
             <Card>
-              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🏦 ROI par bookmaker</div>
-              <ResponsiveContainer width="100%" height={Math.max(130,bookData.length*36)}>
-                <BarChart data={bookData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
-                  <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
-                  <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:11}} width={75}/>
-                  <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
-                  <Bar dataKey="roi" radius={[0,6,6,0]}>
-                    {bookData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.teal:COLORS.red}/>)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ color:COLORS.text, fontWeight:700, marginBottom:14 }}>🏦 Stats par bookmaker</div>
+              {BOOKMAKERS.map((bk,i) => {
+                const bb = filteredBets.filter(b=>b.bookmaker===bk);
+                if (bb.length===0) return null;
+                const bs = calcStats(bb);
+                const won = bb.filter(b=>b.resultat==="gagné").length;
+                return (
+                  <div key={i} style={{ marginBottom:14, background:COLORS.card2, borderRadius:12, padding:14 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                      <div style={{ fontWeight:700, fontSize:14, color:COLORS.text }}>{bk}</div>
+                      <div style={{ display:"flex", gap:6 }}>
+                        <span style={{ background:`${COLORS.teal}22`, color:COLORS.teal, border:`1px solid ${COLORS.teal}44`, borderRadius:6, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{bb.length} paris</span>
+                        <span style={{ background:bs.benefice>=0?`${COLORS.green}22`:`${COLORS.red}22`, color:bs.benefice>=0?COLORS.green:COLORS.red, border:`1px solid ${bs.benefice>=0?COLORS.green:COLORS.red}44`, borderRadius:6, padding:"2px 8px", fontSize:11, fontWeight:700 }}>{bs.benefice>=0?"+":""}{bs.benefice.toFixed(1)}€</span>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom:8 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                        <span style={{ color:COLORS.muted, fontSize:11 }}>Taux de réussite</span>
+                        <span style={{ color:COLORS.text, fontSize:11, fontWeight:700 }}>{won}/{bb.length} ({bs.tauxReussite.toFixed(1)}%)</span>
+                      </div>
+                      <div style={{ height:6, background:COLORS.border, borderRadius:3, overflow:"hidden" }}>
+                        <div style={{ height:"100%", borderRadius:3, width:`${bs.tauxReussite}%`, background:bs.tauxReussite>=50?`linear-gradient(90deg,${COLORS.teal},${COLORS.green})`:`linear-gradient(90deg,${COLORS.amber},${COLORS.red})`, transition:"width .5s ease" }}/>
+                      </div>
+                    </div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>ROI</div>
+                        <div style={{ color:bs.roi>=0?COLORS.green:COLORS.red, fontWeight:700, fontSize:13 }}>{bs.roi>=0?"+":""}{bs.roi.toFixed(1)}%</div>
+                      </div>
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>Misé</div>
+                        <div style={{ color:COLORS.text, fontWeight:700, fontSize:13 }}>{bs.totalMise}€</div>
+                      </div>
+                      <div style={{ textAlign:"center" }}>
+                        <div style={{ color:COLORS.muted, fontSize:10, marginBottom:2 }}>Cote moy.</div>
+                        <div style={{ color:COLORS.text, fontWeight:700, fontSize:13 }}>{bs.coteMoy.toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }).filter(Boolean)}
+              {bookData.length > 1 && (
+                <ResponsiveContainer width="100%" height={Math.max(120,bookData.length*36)}>
+                  <BarChart data={bookData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                    <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
+                    <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:11}} width={75}/>
+                    <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}/>
+                    <Bar dataKey="roi" radius={[0,6,6,0]}>
+                      {bookData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.teal:COLORS.red}/>)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </Card>
           )}
 
@@ -761,8 +820,100 @@ function Statistics({ bets }) {
             </Card>
           )}
 
-          {/* Performance par jour */}
-          <Card>
+          {/* ROI par pays */}
+          {(() => {
+            const paysData = Object.keys(PAYS_CHAMPIONNATS).map(p => {
+              const pb = filteredBets.filter(b=>b.pays===p);
+              const ps = calcStats(pb);
+              return { name:p, roi:parseFloat(ps.roi.toFixed(1)), paris:pb.length, benefice:parseFloat(ps.benefice.toFixed(1)) };
+            }).filter(d=>d.paris>0).sort((a,b)=>b.paris-a.paris);
+            return paysData.length > 0 ? (
+              <Card>
+                <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🌍 ROI par pays</div>
+                <ResponsiveContainer width="100%" height={Math.max(130,paysData.length*36)}>
+                  <BarChart data={paysData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                    <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
+                    <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:11}} width={80}/>
+                    <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}
+                      formatter={(v,n,p)=>[`ROI: ${v}% · ${p.payload.paris} paris`,""]}/>
+                    <Bar dataKey="roi" radius={[0,6,6,0]}>
+                      {paysData.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.green:COLORS.red}/>)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            ) : null;
+          })()}
+
+          {/* ROI par championnat */}
+          {(() => {
+            const champData = {};
+            filteredBets.forEach(b => {
+              if (!b.championnat) return;
+              if (!champData[b.championnat]) champData[b.championnat] = [];
+              champData[b.championnat].push(b);
+            });
+            const champArr = Object.entries(champData).map(([name, bets]) => {
+              const cs = calcStats(bets);
+              return { name, roi:parseFloat(cs.roi.toFixed(1)), paris:bets.length, benefice:parseFloat(cs.benefice.toFixed(1)) };
+            }).sort((a,b)=>b.paris-a.paris).slice(0,10);
+            return champArr.length > 0 ? (
+              <Card>
+                <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>🏆 ROI par championnat</div>
+                <ResponsiveContainer width="100%" height={Math.max(130,champArr.length*36)}>
+                  <BarChart data={champArr} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border}/>
+                    <XAxis type="number" tick={{fill:COLORS.muted,fontSize:10}}/>
+                    <YAxis type="category" dataKey="name" tick={{fill:COLORS.muted,fontSize:10}} width={110}/>
+                    <Tooltip contentStyle={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:8, color:COLORS.text }}
+                      formatter={(v,n,p)=>[`ROI: ${v}% · ${p.payload.paris} paris`,""]}/>
+                    <Bar dataKey="roi" radius={[0,6,6,0]}>
+                      {champArr.map((e,i)=><Cell key={i} fill={e.roi>=0?COLORS.amber:COLORS.red}/>)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            ) : null;
+          })()}
+
+          {/* Top championnats — le plus joué */}
+          {(() => {
+            const champData = {};
+            filteredBets.forEach(b => {
+              const key = b.championnat || "Non renseigné";
+              if (!champData[key]) champData[key] = { paris:0, gagnes:0, benefice:0 };
+              champData[key].paris++;
+              if (b.resultat==="gagné") champData[key].gagnes++;
+              champData[key].benefice += b.gain || 0;
+            });
+            const top = Object.entries(champData)
+              .map(([name, d]) => ({ name, ...d, taux: parseFloat((d.gagnes/d.paris*100).toFixed(1)), benefice: parseFloat(d.benefice.toFixed(1)) }))
+              .sort((a,b)=>b.paris-a.paris).slice(0,8);
+            return top.length > 0 ? (
+              <Card>
+                <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📊 Championnats — les plus joués</div>
+                {top.map((c,i) => (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom: i<top.length-1?`1px solid ${COLORS.border}`:"none" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:24, height:24, borderRadius:6, background:COLORS.card2, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:COLORS.muted }}>
+                        {i+1}
+                      </div>
+                      <div>
+                        <div style={{ color:COLORS.text, fontSize:13, fontWeight:600 }}>{c.name}</div>
+                        <div style={{ color:COLORS.muted, fontSize:11 }}>{c.paris} paris · {c.taux}% réussite</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ color:c.benefice>=0?COLORS.green:COLORS.red, fontWeight:700, fontSize:13 }}>
+                        {c.benefice>=0?"+":""}{c.benefice}€
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            ) : null;
+          })()}
             <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📅 Performance par jour</div>
             <ResponsiveContainer width="100%" height={130}>
               <BarChart data={jourData}>
@@ -1481,10 +1632,17 @@ function AddBetModal({ onSave, onClose }) {
     date: new Date().toISOString().slice(0,10),
     sport: "Football", bookmaker: "Betclic", type: "Simple",
     marche: "Résultat match", sousMarche: "Victoire domicile",
+    pays: "France", championnat: "Ligue 1",
     cote: "", mise: "", resultat: "gagné", live: false
   });
   const set = (k,v) => setForm(p=>({...p,[k]:v}));
   const [showScan, setShowScan] = useState(false);
+
+  // Quand le pays change, reset le championnat
+  const handlePaysChange = (p) => {
+    set("pays", p);
+    set("championnat", PAYS_CHAMPIONNATS[p]?.[0] || "Autre");
+  };
 
   const handleScanResult = (parsed) => {
     setForm(p=>({
@@ -1545,8 +1703,28 @@ function AddBetModal({ onSave, onClose }) {
 
         {inp("Date","date","date")}
         {inp("Sport","sport","text",SPORTS)}
-        {inp("Bookmaker","bookmaker","text",BOOKMAKERS)}
-        {inp("Type de pari","type","text",TYPES)}
+
+        {/* Pays */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:4 }}>🌍 Pays / Compétition</label>
+          <select value={form.pays} onChange={e=>handlePaysChange(e.target.value)} style={{
+            width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.border}`,
+            borderRadius:8, padding:"10px 12px", color:COLORS.text, fontSize:14
+          }}>
+            {Object.keys(PAYS_CHAMPIONNATS).map(p=><option key={p}>{p}</option>)}
+          </select>
+        </div>
+
+        {/* Championnat */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:4 }}>🏆 Championnat / Ligue</label>
+          <select value={form.championnat} onChange={e=>set("championnat",e.target.value)} style={{
+            width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.amber}44`,
+            borderRadius:8, padding:"10px 12px", color:COLORS.amber, fontSize:14, fontWeight:600
+          }}>
+            {(PAYS_CHAMPIONNATS[form.pays]||["Autre"]).map(c=><option key={c}>{c}</option>)}
+          </select>
+        </div>
 
         {/* Marché */}
         <div style={{ marginBottom:12 }}>
@@ -1951,6 +2129,129 @@ function ScanModal({ onResult, onClose }) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError]     = useState("");
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setError(""); setLoading(true);
+
+    // Aperçu
+    const reader = new FileReader();
+    reader.onload = r => setPreview(r.result);
+    reader.readAsDataURL(file);
+
+    // Conversion base64
+    const b64Reader = new FileReader();
+    b64Reader.onload = async (ev) => {
+      const base64 = ev.result.split(",")[1];
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "x-api-key": "YOUR_ANTHROPIC_API_KEY",
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-allow-browser": "true"
+          },
+          body: JSON.stringify({
+            model:"claude-sonnet-4-20250514",
+            max_tokens:600,
+            messages:[{
+              role:"user",
+              content:[
+                { type:"image", source:{ type:"base64", media_type: file.type, data: base64 }},
+                { type:"text", text:`Analyse ce ticket de pari sportif et extrait uniquement les informations du pari principal visible (pas les autres paris en arrière-plan). Réponds en JSON pur sans markdown :
+{
+  "sport": "nom du sport (Football, Tennis, Basketball, etc.)",
+  "bookmaker": "nom du bookmaker (Betclic, Unibet, Winamax, PMU, Bwin, etc.)",
+  "type": "Simple ou Combiné",
+  "marche": "type de marché (Résultat match, Buts, Buteur, Mi-temps, etc.)",
+  "sousMarche": "sélection précise (ex: Lyon gagne, Plus de 2.5 buts, etc.)",
+  "cote": nombre décimal,
+  "mise": nombre,
+  "resultat": "gagné ou perdu ou en cours",
+  "date": "YYYY-MM-DD"
+}
+Si une info est illisible, mets null. Réponds UNIQUEMENT avec le JSON brut.` }
+              ]
+            }]
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error?.message || `Erreur ${res.status}`);
+        }
+
+        const data = await res.json();
+        const text = data.content?.map(c=>c.text||"").join("") || "";
+        const clean = text.replace(/```json|```/g,"").trim();
+        const parsed = JSON.parse(clean);
+        onResult(parsed);
+        onClose();
+      } catch(err) {
+        console.error("Scan error:", err);
+        setError(`Impossible de lire le ticket : ${err.message || "image trop floue ou illisible"}`);
+      } finally { setLoading(false); }
+    };
+    b64Reader.readAsDataURL(file);
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.9)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
+      <div style={{ background:COLORS.card, width:"100%", borderRadius:"20px 20px 0 0", padding:24, maxHeight:"90vh", overflowY:"auto" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+          <div style={{ fontWeight:800, fontSize:17 }}>📸 Scanner un ticket</div>
+          <button onClick={onClose} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:24, cursor:"pointer" }}>✕</button>
+        </div>
+
+        {/* Instructions */}
+        <div style={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:12, padding:14, marginBottom:16, fontSize:13, lineHeight:1.7 }}>
+          <div style={{ color:COLORS.text, fontWeight:700, marginBottom:6 }}>📋 Comment bien scanner :</div>
+          <div style={{ color:COLORS.muted }}>
+            📱 <strong style={{color:COLORS.text}}>Capture d'écran</strong> → cadrez sur <strong style={{color:COLORS.amber}}>un seul pari</strong> (recadrez si nécessaire pour n'avoir que le pari à enregistrer visible)<br/>
+            📷 <strong style={{color:COLORS.text}}>Photo ticket papier</strong> → bonne lumière, image nette<br/>
+            <span style={{color:COLORS.teal}}>✨ L'IA extrait automatiquement sport, cote, mise et marché</span>
+          </div>
+        </div>
+
+        {preview && (
+          <img src={preview} style={{ width:"100%", borderRadius:12, marginBottom:16, maxHeight:220, objectFit:"contain", background:"#000" }} alt="aperçu"/>
+        )}
+
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"24px 0" }}>
+            <div style={{ fontSize:40, marginBottom:10, animation:"spin 1s linear infinite" }}>🔍</div>
+            <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+            <div style={{ color:COLORS.green, fontWeight:700, fontSize:16 }}>Analyse en cours...</div>
+            <div style={{ color:COLORS.muted, fontSize:12, marginTop:6 }}>L'IA lit votre ticket, merci de patienter</div>
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            <label style={{ display:"block", background:COLORS.green, color:COLORS.bg, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:800, fontSize:15, cursor:"pointer" }}>
+              📷 Prendre une photo
+              <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display:"none" }}/>
+            </label>
+            <label style={{ display:"block", background:COLORS.card2, border:`1px solid ${COLORS.border}`, color:COLORS.text, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:700, fontSize:15, cursor:"pointer" }}>
+              🖼️ Choisir depuis la galerie
+              <input type="file" accept="image/*" onChange={handleFile} style={{ display:"none" }}/>
+            </label>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:10, padding:"12px 14px", color:COLORS.red, fontSize:13, marginTop:14, lineHeight:1.5 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <p style={{ color:COLORS.muted, fontSize:11, textAlign:"center", marginTop:14, lineHeight:1.5 }}>
+          💡 Vérifiez toujours les données extraites avant d'enregistrer
+        </p>
+      </div>
+    </div>
+  );
+}
 
   const handleFile = async (e) => {
     const file = e.target.files[0];
