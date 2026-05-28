@@ -914,6 +914,8 @@ function Statistics({ bets }) {
               </Card>
             ) : null;
           })()}
+
+          <Card>
             <div style={{ color:COLORS.text, fontWeight:700, marginBottom:12 }}>📅 Performance par jour</div>
             <ResponsiveContainer width="100%" height={130}>
               <BarChart data={jourData}>
