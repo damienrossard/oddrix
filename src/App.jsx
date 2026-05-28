@@ -1585,9 +1585,80 @@ function Help({ user }) {
         )}
       </Card>
 
-      {/* Jeu responsable */}
+      {/* Guide d'installation */}
       <Card>
-        <div style={{ color:COLORS.red, fontWeight:800, fontSize:16, marginBottom:8 }}>🆘 Jeu responsable</div>
+        <div style={{ color:COLORS.text, fontWeight:800, fontSize:16, marginBottom:4 }}>📲 Installer l'application</div>
+        <div style={{ color:COLORS.muted, fontSize:12, marginBottom:16 }}>Ajoutez Oddrix sur votre écran d'accueil</div>
+
+        {/* iPhone */}
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+            <div style={{ background:"#1a1a2e", border:"1px solid #333", borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🍎</div>
+            <div>
+              <div style={{ color:COLORS.text, fontWeight:700, fontSize:14 }}>iPhone / iPad</div>
+              <div style={{ color:COLORS.muted, fontSize:11 }}>Safari obligatoire</div>
+            </div>
+          </div>
+          {[
+            { n:1, t:"Ouvrez Safari", d:"Uniquement Safari — pas Chrome ni Firefox" },
+            { n:2, t:"Allez sur oddrix.fr", d:"Tapez l'adresse dans la barre Safari" },
+            { n:3, t:"Appuyez sur Partager ↑", d:"Le carré avec une flèche en bas de Safari" },
+            { n:4, t:"Sur l'écran d'accueil", d:"Faites défiler le menu et appuyez dessus" },
+            { n:5, t:"Appuyez sur Ajouter", d:"Confirmez le nom \"Oddrix\" puis validez" },
+          ].map((s,i) => (
+            <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"8px 0", borderBottom: i<4?`1px solid ${COLORS.border}`:"none" }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", background:`linear-gradient(135deg,${COLORS.green},${COLORS.teal})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:COLORS.bg, flexShrink:0 }}>{s.n}</div>
+              <div>
+                <div style={{ color:COLORS.text, fontSize:13, fontWeight:600 }}>{s.t}</div>
+                <div style={{ color:COLORS.muted, fontSize:11, marginTop:2 }}>{s.d}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ background:`${COLORS.amber}15`, border:`1px solid ${COLORS.amber}33`, borderRadius:8, padding:"8px 12px", marginTop:10, fontSize:12, color:"#d4aa50" }}>
+            💡 Sur iPhone, seul Safari permet d'installer l'app sur l'écran d'accueil
+          </div>
+        </div>
+
+        {/* Android */}
+        <div style={{ borderTop:`1px solid ${COLORS.border}`, paddingTop:16 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+            <div style={{ background:"#051008", border:"1px solid #1a4020", borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🤖</div>
+            <div>
+              <div style={{ color:COLORS.text, fontWeight:700, fontSize:14 }}>Android</div>
+              <div style={{ color:COLORS.muted, fontSize:11 }}>Chrome, Samsung Internet...</div>
+            </div>
+          </div>
+          {[
+            { n:1, t:"Ouvrez Chrome", d:"Google Chrome sur votre Android" },
+            { n:2, t:"Allez sur oddrix.fr", d:"Tapez l'adresse dans la barre" },
+            { n:3, t:"Bannière ou menu ⋮", d:"Une bannière apparaît ou appuyez sur les 3 points" },
+            { n:4, t:"Ajouter à l'écran d'accueil", d:"Appuyez sur cette option" },
+            { n:5, t:"Confirmez", d:"Appuyez sur Ajouter ou Installer" },
+          ].map((s,i) => (
+            <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"8px 0", borderBottom: i<4?`1px solid ${COLORS.border}`:"none" }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", background:`linear-gradient(135deg,${COLORS.green},${COLORS.teal})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:COLORS.bg, flexShrink:0 }}>{s.n}</div>
+              <div>
+                <div style={{ color:COLORS.text, fontSize:13, fontWeight:600 }}>{s.t}</div>
+                <div style={{ color:COLORS.muted, fontSize:11, marginTop:2 }}>{s.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Ordinateur */}
+        <div style={{ borderTop:`1px solid ${COLORS.border}`, paddingTop:16, marginTop:4 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+            <div style={{ fontSize:24 }}>💻</div>
+            <div>
+              <div style={{ color:COLORS.text, fontWeight:700, fontSize:14 }}>Ordinateur</div>
+              <div style={{ color:COLORS.muted, fontSize:11 }}>Tous les navigateurs</div>
+            </div>
+          </div>
+          <div style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6 }}>
+            Ouvrez n'importe quel navigateur et tapez <span style={{color:COLORS.green, fontWeight:600}}>oddrix.fr</span> — l'application s'ouvre directement, aucune installation requise. Mettez la page en favori pour y accéder rapidement.
+          </div>
+        </div>
+      </Card>
         <p style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6 }}>
           Les paris sportifs peuvent créer une dépendance. Si vous ressentez des difficultés, des aides gratuites sont disponibles.
         </p>
