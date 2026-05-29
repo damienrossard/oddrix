@@ -945,11 +945,11 @@ function Statistics({ bets }) {
 }
 
 // ── ONGLET 2 : Mes paris ──────────────────────────────────────────────────
-function BetsList({ bets, onAdd, onDelete }) {
+function BetsList({ bets, onAdd, onDelete, onUpdate }) {
   const [filter, setFilter] = useState("tous");
 
   const filtered = filter==="tous" ? bets
-    : filter==="gagné"||filter==="perdu" ? bets.filter(b=>b.resultat===filter)
+    : filter==="gagné"||filter==="perdu"||filter==="en cours" ? bets.filter(b=>b.resultat===filter)
     : bets.filter(b=>b.sport===filter);
 
   return (
@@ -960,7 +960,7 @@ function BetsList({ bets, onAdd, onDelete }) {
       }}>+ Ajouter un pari</button>
 
       <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-        {["tous","gagné","perdu"].map(f=>(
+        {["tous","gagné","perdu","en cours"].map(f=>(
           <Btn key={f} active={filter===f} onClick={()=>setFilter(f)}>{f.charAt(0).toUpperCase()+f.slice(1)}</Btn>
         ))}
       </div>
@@ -970,7 +970,7 @@ function BetsList({ bets, onAdd, onDelete }) {
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div>
               <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-                <Badge color={b.resultat==="gagné"?COLORS.green:COLORS.red}>{b.resultat==="gagné"?"✅ Gagné":"❌ Perdu"}</Badge>
+                <Badge color={b.resultat==="gagné"?COLORS.green:b.resultat==="en cours"?COLORS.amber:COLORS.red}>{b.resultat==="gagné"?"✅ Gagné":b.resultat==="en cours"?"⏳ En cours":"❌ Perdu"}</Badge>
                 {b.live && <Badge color={COLORS.amber}>⚡ Live</Badge>}
               </div>
               <div style={{ color:COLORS.text, fontWeight:700, fontSize:15 }}>{b.sport} · {b.bookmaker}</div>
@@ -983,7 +983,18 @@ function BetsList({ bets, onAdd, onDelete }) {
               )}
               <div style={{ color:COLORS.muted, fontSize:12, marginTop:4 }}>Mise: {b.mise} € · Gain: <span style={{color:b.gain>0?COLORS.green:COLORS.red}}>{b.gain>0?"+":""}{b.gain} €</span></div>
             </div>
-            <button onClick={()=>onDelete(b.id)} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:18, cursor:"pointer" }}>🗑</button>
+            <div style={{ display:"flex", flexDirection:"column", gap:4, alignItems:"flex-end" }}>
+              {b.resultat==="en cours" && (
+                <>
+                  <button onClick={()=>onUpdate(b.id,"gagné")} style={{ background:`${COLORS.green}22`, border:`1px solid ${COLORS.green}44`, color:COLORS.green, borderRadius:6, padding:"4px 8px", fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>✅ Gagné</button>
+                  <button onClick={()=>onUpdate(b.id,"perdu")} style={{ background:`${COLORS.red}22`, border:`1px solid ${COLORS.red}44`, color:COLORS.red, borderRadius:6, padding:"4px 8px", fontSize:11, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap" }}>❌ Perdu</button>
+                </>
+              )}
+              {b.resultat!=="en cours" && (
+                <button onClick={()=>onUpdate(b.id,"en cours")} style={{ background:`${COLORS.amber}15`, border:`1px solid ${COLORS.amber}33`, color:COLORS.amber, borderRadius:6, padding:"4px 8px", fontSize:10, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}>✏️</button>
+              )}
+              <button onClick={()=>onDelete(b.id)} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:18, cursor:"pointer" }}>🗑</button>
+            </div>
           </div>
         </Card>
       ))}
@@ -1609,8 +1620,8 @@ function Help({ user }) {
             <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"8px 0", borderBottom: i<4?`1px solid ${COLORS.border}`:"none" }}>
               <div style={{ width:24, height:24, borderRadius:"50%", background:`linear-gradient(135deg,${COLORS.green},${COLORS.teal})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:COLORS.bg, flexShrink:0 }}>{s.n}</div>
               <div>
-                <div style={{ color:COLORS.text, fontSize:13, fontWeight:600 }}>{s.t}</div>
-                <div style={{ color:COLORS.muted, fontSize:11, marginTop:2 }}>{s.d}</div>
+                <div style={{ color:COLORS.green, fontSize:13, fontWeight:600 }}>{s.t}</div>
+                <div style={{ color:COLORS.green, fontSize:11, marginTop:2, opacity:0.75 }}>{s.d}</div>
               </div>
             </div>
           ))}
@@ -1638,8 +1649,8 @@ function Help({ user }) {
             <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", padding:"8px 0", borderBottom: i<4?`1px solid ${COLORS.border}`:"none" }}>
               <div style={{ width:24, height:24, borderRadius:"50%", background:`linear-gradient(135deg,${COLORS.green},${COLORS.teal})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:COLORS.bg, flexShrink:0 }}>{s.n}</div>
               <div>
-                <div style={{ color:COLORS.text, fontSize:13, fontWeight:600 }}>{s.t}</div>
-                <div style={{ color:COLORS.muted, fontSize:11, marginTop:2 }}>{s.d}</div>
+                <div style={{ color:COLORS.green, fontSize:13, fontWeight:600 }}>{s.t}</div>
+                <div style={{ color:COLORS.green, fontSize:11, marginTop:2, opacity:0.75 }}>{s.d}</div>
               </div>
             </div>
           ))}
@@ -1772,6 +1783,8 @@ function AddBetModal({ onSave, onClose }) {
 
         {inp("Date","date","date")}
         {inp("Sport","sport","text",SPORTS)}
+        {inp("Bookmaker","bookmaker","text",BOOKMAKERS)}
+        {inp("Type de pari","type","text",TYPES)}
 
         {/* Pays */}
         <div style={{ marginBottom:12 }}>
@@ -1850,6 +1863,8 @@ function LogoSVG({ size=44 }) {
         height: size * 0.75,
         objectFit: "contain",
         flexShrink: 0,
+        mixBlendMode: "screen",
+        filter: "brightness(1.05) contrast(1.1)",
       }}
     />
   );
@@ -1935,6 +1950,8 @@ function SplashScreen({ userName, isNew=false }) {
             width:300, height:"auto",
             objectFit:"contain",
             display:"block",
+            mixBlendMode:"screen",
+            filter:"brightness(1.05) contrast(1.1)",
           }}
         />
       </div>
@@ -3058,6 +3075,19 @@ export default function App() {
     } catch(e) { console.error("Erreur suppression pari:", e); }
   };
 
+  const updateBetResult = async (id, newResult) => {
+    const bet = bets.find(b => b.id === id);
+    if (!bet) return;
+    const gain = newResult === "gagné" ? parseFloat((bet.mise * bet.cote).toFixed(2)) : newResult === "perdu" ? -bet.mise : 0;
+    const updated = { ...bet, resultat: newResult, gain };
+    setBets(prev => prev.map(b => b.id === id ? updated : b));
+    if (user?.uid) {
+      try {
+        await setDoc(doc(db, "users", user.uid, "bets", String(id)), { resultat: newResult, gain }, { merge: true });
+      } catch(e) { console.error("Erreur mise à jour pari:", e); }
+    }
+  };
+
   // Jours restants d'essai
   const trialDaysLeft = user ? Math.max(0, Math.ceil((new Date(user.trialEnd) - new Date()) / (1000*60*60*24))) : 0;
 
@@ -3124,7 +3154,7 @@ export default function App() {
       <div style={{ padding:"16px 16px 0" }}>
         {tab===0 && <Dashboard bets={bets} onAddBet={()=>setShowAdd(true)}/>}
         {tab===1 && <Statistics bets={bets}/>}
-        {tab===2 && <BetsList bets={bets} onAdd={()=>setShowAdd(true)} onDelete={delBet}/>}
+        {tab===2 && <BetsList bets={bets} onAdd={()=>setShowAdd(true)} onDelete={delBet} onUpdate={updateBetResult}/>}
         {tab===3 && <Analysis bets={bets}/>}
         {tab===4 && <Profile bets={bets} user={user} onLogout={handleLogout} onSubscribe={()=>setScreen("paywall")}/>}
         {tab===5 && <Leaderboard bets={bets}/>}
