@@ -1885,16 +1885,14 @@ function LogoSVG({ size=44 }) {
   );
 }
 
-function SplashScreen({ userName, isNew=false, onEnd }) {
+// ── Splash Screen 3 phases ───────────────────────────────────────────────
+// ── Splash Screen cinématique ────────────────────────────────────────────
+function SplashScreen({ userName, isNew=false }) {
+  const VIDEO_URL = "https://raw.githubusercontent.com/damienrossard/oddrix/main/logo-oddrix.mp4";
   const hour = new Date().getHours();
   const timeGreet = isNew
     ? `Bienvenue sur Oddrix${userName ? `, ${userName}` : ""} ! 🎉`
     : `${hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}${userName ? `, ${userName}` : ""} 👋`;
-
-  React.useEffect(() => {
-    const t = setTimeout(() => { if (onEnd) onEnd(); }, 3000);
-    return () => clearTimeout(t);
-  }, []);
 
   return (
     <div style={{
@@ -1905,16 +1903,11 @@ function SplashScreen({ userName, isNew=false, onEnd }) {
       zIndex:9999,
     }}>
       <video
-        src="https://raw.githubusercontent.com/damienrossard/oddrix/main/logo-oddrix.mp4"
+        src={VIDEO_URL}
         autoPlay
         muted
         playsInline
-        onEnded={() => { if (onEnd) onEnd(); }}
-        style={{
-          width:300, height:"auto",
-          objectFit:"contain",
-          display:"block",
-        }}
+        style={{ width:300, height:"auto", objectFit:"contain", display:"block" }}
       />
       <div style={{ textAlign:"center", marginTop:16 }}>
         <div style={{ color:COLORS.green, fontSize:20, fontWeight:700, letterSpacing:2 }}>
@@ -2516,7 +2509,6 @@ export default function App() {
   const [screen, setScreen]         = useState("loading");
   const [showSplash, setShowSplash] = useState(false);
   const [isNewUser, setIsNewUser]   = useState(false);
-  const [nextScreen, setNextScreen] = useState("app");
   const [tab, setTab]               = useState(0);
   const [bets, setBets]             = useState([]);
   const [showAdd, setShowAdd]       = useState(false);
@@ -2563,9 +2555,11 @@ export default function App() {
       const hasAccess = profile.subscribed || trialEnd > new Date();
 
       setIsNewUser(isNew);
-      const dest = isNew ? "onboarding" : (hasAccess ? "app" : "paywall");
-      setNextScreen(dest);
       setShowSplash(true);
+      setTimeout(() => {
+        setShowSplash(false);
+        setScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
+      }, 11000);
     } catch(e) {
       console.error("Erreur chargement profil:", e);
       setScreen("auth");
@@ -2676,7 +2670,7 @@ export default function App() {
   ];
 
   if (screen==="loading")    return <div style={{ background:"#0d1117", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><LogoSVG size={80}/></div>;
-  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser} onEnd={()=>{ setShowSplash(false); setScreen(nextScreen); }}/>;
+  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser}/>;
   if (screen==="onboarding") return <Onboarding onDone={()=>{ const trialEnd=new Date(user.trialEnd); setScreen(user.subscribed||trialEnd>new Date()?"app":"paywall"); }}/>;
   if (screen==="auth")       return <AuthScreen onAuth={handleAuth}/>;
   if (screen==="paywall")    return <PaywallScreen user={user} onSubscribe={handleSubscribe} onLogout={handleLogout}/>;
