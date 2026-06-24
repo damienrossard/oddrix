@@ -2521,6 +2521,7 @@ export default function App() {
   const [screen, setScreen]         = useState("loading");
   const [showSplash, setShowSplash] = useState(false);
   const [isNewUser, setIsNewUser]   = useState(false);
+  const [nextScreen, setNextScreen] = useState("app");
   const [tab, setTab]               = useState(0);
   const [bets, setBets]             = useState([]);
   const [showAdd, setShowAdd]       = useState(false);
