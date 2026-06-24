@@ -2260,7 +2260,7 @@ function ScanModal({ onResult, onClose }) {
         onClose();
       } catch(err) {
         console.error("Scan error:", err);
-        setError(`Impossible de lire le ticket : ${err.message || "image trop floue ou illisible"}`);
+        setError(`Erreur : ${err.message || "image illisible ou connexion échouée"}`);
       } finally { setLoading(false); }
     };
     b64Reader.readAsDataURL(file);
@@ -2322,39 +2322,6 @@ function ScanModal({ onResult, onClose }) {
   );
 }
 
-  const handleFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setError(""); setLoading(true);
-
-    // Aperçu
-    const reader = new FileReader();
-    reader.onload = r => setPreview(r.result);
-    reader.readAsDataURL(file);
-
-    // Conversion base64
-    const b64Reader = new FileReader();
-    b64Reader.onload = async (ev) => {
-      const base64 = ev.result.split(",")[1];
-      try {
-        const res = await fetch("/api/scan", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ image: base64, mediaType: file.type })
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || `Erreur ${res.status}`);
-        }
-        const parsed = await res.json();
-        onResult(parsed);
-        onClose();
-      } catch(err) {
-        setError("Impossible de lire le ticket. Essayez une photo plus nette.");
-      } finally { setLoading(false); }
-    };
-    b64Reader.readAsDataURL(file);
-  };
 
 
 // ── Modal CGV ─────────────────────────────────────────────────────────────
