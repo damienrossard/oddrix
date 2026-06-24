@@ -2255,7 +2255,7 @@ Si une info est absente mets null. JSON brut uniquement.`;
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          "x-api-key":"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",
+          "x-api-key":import.meta.env.VITE_ANTHROPIC_KEY,
           "anthropic-version":"2023-06-01",
           "anthropic-dangerous-allow-browser":"true"
         },
