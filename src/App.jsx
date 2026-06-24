@@ -1741,14 +1741,17 @@ function AddBetModal({ onSave, onClose }) {
   const handleScanResult = (parsed) => {
     setForm(p=>({
       ...p,
-      sport:      parsed.sport      || p.sport,
-      bookmaker:  parsed.bookmaker  || p.bookmaker,
-      type:       parsed.type       || p.type,
-      marche:     parsed.marche     || p.marche,
-      sousMarche: parsed.sousMarche || p.sousMarche,
-      cote:       parsed.cote       || p.cote,
-      mise:       parsed.mise       || p.mise,
-      date:       parsed.date       || p.date,
+      sport:      parsed.sport        || p.sport,
+      bookmaker:  parsed.bookmaker    || p.bookmaker,
+      type:       parsed.type         || p.type,
+      pays:       parsed.pays         || p.pays,
+      championnat:parsed.championnat  || p.championnat,
+      marche:     parsed.marche       || p.marche,
+      sousMarche: parsed.sousMarche   || p.sousMarche,
+      cote:       parsed.cote         || p.cote,
+      mise:       parsed.mise         || p.mise,
+      resultat:   parsed.resultat     || p.resultat,
+      date:       parsed.date         || p.date,
     }));
   };
 
@@ -2245,30 +2248,17 @@ function ScanModal({ onResult, onClose }) {
           method:"POST",
           headers:{
             "Content-Type":"application/json",
-            "x-api-key": "YOUR_ANTHROPIC_API_KEY",
             "anthropic-version": "2023-06-01",
             "anthropic-dangerous-allow-browser": "true"
           },
           body: JSON.stringify({
-            model:"claude-sonnet-4-20250514",
+            model:"claude-sonnet-4-6",
             max_tokens:600,
             messages:[{
               role:"user",
               content:[
                 { type:"image", source:{ type:"base64", media_type: file.type, data: base64 }},
-                { type:"text", text:`Analyse ce ticket de pari sportif et extrait uniquement les informations du pari principal visible (pas les autres paris en arrière-plan). Réponds en JSON pur sans markdown :
-{
-  "sport": "nom du sport (Football, Tennis, Basketball, etc.)",
-  "bookmaker": "nom du bookmaker (Betclic, Unibet, Winamax, PMU, Bwin, etc.)",
-  "type": "Simple ou Combiné",
-  "marche": "type de marché (Résultat match, Buts, Buteur, Mi-temps, etc.)",
-  "sousMarche": "sélection précise (ex: Lyon gagne, Plus de 2.5 buts, etc.)",
-  "cote": nombre décimal,
-  "mise": nombre,
-  "resultat": "gagné ou perdu ou en cours",
-  "date": "YYYY-MM-DD"
-}
-Si une info est illisible, mets null. Réponds UNIQUEMENT avec le JSON brut.` }
+                { type:"text", text:`Tu es un expert en paris sportifs. Analyse cette capture d'écran de l'application Winamax (ou tout autre bookmaker visible) et extrais TOUTES les informations importantes du pari. Identifie bien le bookmaker depuis le logo ou le design de l'interface. Réponds UNIQUEMENT en JSON brut sans markdown ni texte supplémentaire :\n{\n  \"sport\": \"Football | Tennis | Basketball | Rugby | Handball | Hockey | Baseball | MMA | Golf | etc.\",\n  \"bookmaker\": \"Winamax | Betclic | Unibet | PMU | Bwin | Betway | NetBet | Zebet | etc. (lis le logo/interface)\",\n  \"type\": \"Simple | Combiné | Super Combiné | Système\",\n  \"pays\": \"France | Espagne | Angleterre | Allemagne | Italie | International | etc.\",\n  \"championnat\": \"Ligue 1 | Premier League | Liga | Serie A | Champions League | etc.\",\n  \"marche\": \"Résultat match | 1N2 | Buts | Buteur | Handicap | Mi-temps | Double chance | etc.\",\n  \"sousMarche\": \"la sélection précise visible (ex: PSG gagne, Plus de 2.5 buts, Mbappé 1er buteur, Nul, etc.)\",\n  \"cote\": nombre décimal exact visible (ex: 2.35),\n  \"mise\": nombre en euros exact visible,\n  \"gainPotentiel\": nombre en euros si visible sinon null,\n  \"resultat\": \"en cours | gagné | perdu (déduis depuis les couleurs/icônes de l'interface)\",\n  \"date\": \"YYYY-MM-DD (date du match si visible)\",\n  \"equipes\": \"Equipe A vs Equipe B si visible sinon null\"\n}\nSi une information est absente ou illisible mets null. JSON brut uniquement.` }
               ]
             }]
           })
@@ -2368,24 +2358,13 @@ Si une info est illisible, mets null. Réponds UNIQUEMENT avec le JSON brut.` }
           method:"POST",
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
-            model:"claude-sonnet-4-20250514",
-            max_tokens:500,
+            model:"claude-sonnet-4-6",
+            max_tokens:700,
             messages:[{
               role:"user",
               content:[
                 { type:"image", source:{ type:"base64", media_type: file.type, data: base64 }},
-                { type:"text",  text:`Tu es un assistant d'analyse de tickets de paris sportifs. Analyse cette image et extrait les informations suivantes en JSON pur sans markdown :
-{
-  "sport": "nom du sport",
-  "bookmaker": "nom du bookmaker",
-  "type": "Simple ou Combiné",
-  "marche": "type de marché (Résultat match, Buts, Buteur, etc.)",
-  "sousMarche": "sélection précise",
-  "cote": nombre,
-  "mise": nombre,
-  "date": "YYYY-MM-DD"
-}
-Si tu ne peux pas lire une info, mets null. Réponds uniquement avec le JSON.` }
+                { type:"text", text:`Tu es un expert en paris sportifs. Analyse cette capture d'écran de l'application Winamax (ou tout autre bookmaker visible) et extrais TOUTES les informations importantes du pari. Identifie bien le bookmaker depuis le logo ou le design de l'interface. Réponds UNIQUEMENT en JSON brut sans markdown ni texte supplémentaire :\n{\n  \"sport\": \"Football | Tennis | Basketball | Rugby | Handball | Hockey | Baseball | MMA | Golf | etc.\",\n  \"bookmaker\": \"Winamax | Betclic | Unibet | PMU | Bwin | Betway | NetBet | Zebet | etc. (lis le logo/interface)\",\n  \"type\": \"Simple | Combiné | Super Combiné | Système\",\n  \"pays\": \"France | Espagne | Angleterre | Allemagne | Italie | International | etc.\",\n  \"championnat\": \"Ligue 1 | Premier League | Liga | Serie A | Champions League | etc.\",\n  \"marche\": \"Résultat match | 1N2 | Buts | Buteur | Handicap | Mi-temps | Double chance | etc.\",\n  \"sousMarche\": \"la sélection précise visible (ex: PSG gagne, Plus de 2.5 buts, Mbappé 1er buteur, Nul, etc.)\",\n  \"cote\": nombre décimal exact visible (ex: 2.35),\n  \"mise\": nombre en euros exact visible,\n  \"gainPotentiel\": nombre en euros si visible sinon null,\n  \"resultat\": \"en cours | gagné | perdu (déduis depuis les couleurs/icônes de l'interface)\",\n  \"date\": \"YYYY-MM-DD (date du match si visible)\",\n  \"equipes\": \"Equipe A vs Equipe B si visible sinon null\"\n}\nSi une information est absente ou illisible mets null. JSON brut uniquement.` }
               ]
             }]
           })
