@@ -1891,12 +1891,10 @@ function SplashScreen({ userName, isNew=false, onEnd }) {
     ? `Bienvenue sur Oddrix${userName ? `, ${userName}` : ""} ! 🎉`
     : `${hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}${userName ? `, ${userName}` : ""} 👋`;
 
-  const [ended, setEnded] = React.useState(false);
-
-  const handleEnd = () => {
-    setEnded(true);
-    setTimeout(() => { if (onEnd) onEnd(); }, 800);
-  };
+  React.useEffect(() => {
+    const t = setTimeout(() => { if (onEnd) onEnd(); }, 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <div style={{
@@ -1905,16 +1903,13 @@ function SplashScreen({ userName, isNew=false, onEnd }) {
       display:"flex", flexDirection:"column",
       alignItems:"center", justifyContent:"center",
       zIndex:9999,
-      opacity: ended ? 0 : 1,
-      transition: "opacity 0.8s ease",
-      pointerEvents: ended ? "none" : "auto",
     }}>
       <video
         src="https://raw.githubusercontent.com/damienrossard/oddrix/main/logo-oddrix.mp4"
         autoPlay
         muted
         playsInline
-        onEnded={handleEnd}
+        onEnded={() => { if (onEnd) onEnd(); }}
         style={{
           width:300, height:"auto",
           objectFit:"contain",
@@ -2568,13 +2563,9 @@ export default function App() {
       const hasAccess = profile.subscribed || trialEnd > new Date();
 
       setIsNewUser(isNew);
-      setNextScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
+      const dest = isNew ? "onboarding" : (hasAccess ? "app" : "paywall");
+      setNextScreen(dest);
       setShowSplash(true);
-      // Fallback si la vidéo ne se charge pas
-      setTimeout(() => {
-        setShowSplash(false);
-        setScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
-      }, 11000);
     } catch(e) {
       console.error("Erreur chargement profil:", e);
       setScreen("auth");
