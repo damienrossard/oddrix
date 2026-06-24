@@ -1910,7 +1910,7 @@ function SplashScreen({ userName, isNew=false, onEnd }) {
       pointerEvents: ended ? "none" : "auto",
     }}>
       <video
-        src="https://raw.githubusercontent.com/damienrossard/oddrix/main/Vid%C3%A9o%20logo%20Oddrix.mp4"
+        src="https://raw.githubusercontent.com/damienrossard/oddrix/main/logo-oddrix.mp4"
         autoPlay
         muted
         playsInline
