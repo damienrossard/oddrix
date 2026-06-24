@@ -2247,33 +2247,15 @@ function ScanModal({ onResult, onClose }) {
       const base64 = dataUrl.split(",")[1];
       const mediaType = file.type || "image/jpeg";
 
-      const PROMPT = `Tu es un expert en paris sportifs. Analyse cette capture d'écran (Winamax ou autre bookmaker) et extrais TOUTES les informations du pari. Réponds UNIQUEMENT en JSON brut sans markdown :
-{"sport":"Football|Tennis|Basketball|Rugby|etc.","bookmaker":"Winamax|Betclic|Unibet|PMU|etc.","type":"Simple|Combiné|Super Combiné","pays":"France|Espagne|Angleterre|etc.","championnat":"Ligue 1|Premier League|Liga|etc.","marche":"Résultat match|Buts|Buteur|Handicap|etc.","sousMarche":"sélection précise","cote":2.35,"mise":10,"gainPotentiel":null,"resultat":"en cours|gagné|perdu","date":"YYYY-MM-DD","equipes":"Equipe A vs Equipe B ou null"}
-Si une info est absente mets null. JSON brut uniquement.`;
-
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("https://splendorous-khapse-9de1d7.netlify.app/.netlify/functions/scan", {
         method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key":import.meta.env.VITE_ANTHROPIC_KEY,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-allow-browser":"true"
-        },
-        body: JSON.stringify({
-          model:"claude-sonnet-4-6",
-          max_tokens:700,
-          messages:[{role:"user",content:[
-            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-            {type:"text",text:PROMPT}
-          ]}]
-        })
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ image: base64, mediaType })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || `Erreur ${res.status}`);
-      const text = data.content?.map(c=>c.text||"").join("") || "";
-      const clean = text.replace(/```json|```/g,"").trim();
-      const parsed = JSON.parse(clean);
+      const rawText = await res.text();
+      if (!res.ok) throw new Error(`Erreur ${res.status}: ${rawText.substring(0,150)}`);
+      const parsed = JSON.parse(rawText);
       onResult(parsed);
       onClose();
     } catch(err) {
