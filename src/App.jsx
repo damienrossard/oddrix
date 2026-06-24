@@ -2342,23 +2342,11 @@ function ScanModal({ onResult, onClose }) {
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ image: base64, mediaType: file.type })
         });
-        // legacy placeholder
-        if (false) { const _unused = JSON.stringify({
-            model:"claude-sonnet-4-6",
-            max_tokens:700,
-            messages:[{
-              role:"user",
-              content:[
-                { type:"image", source:{ type:"base64", media_type: file.type, data: base64 }},
-                { type:"text", text:`Tu es un expert en paris sportifs. Analyse cette capture d'écran de l'application Winamax (ou tout autre bookmaker visible) et extrais TOUTES les informations importantes du pari. Identifie bien le bookmaker depuis le logo ou le design de l'interface. Réponds UNIQUEMENT en JSON brut sans markdown ni texte supplémentaire :\n{\n  \"sport\": \"Football | Tennis | Basketball | Rugby | Handball | Hockey | Baseball | MMA | Golf | etc.\",\n  \"bookmaker\": \"Winamax | Betclic | Unibet | PMU | Bwin | Betway | NetBet | Zebet | etc. (lis le logo/interface)\",\n  \"type\": \"Simple | Combiné | Super Combiné | Système\",\n  \"pays\": \"France | Espagne | Angleterre | Allemagne | Italie | International | etc.\",\n  \"championnat\": \"Ligue 1 | Premier League | Liga | Serie A | Champions League | etc.\",\n  \"marche\": \"Résultat match | 1N2 | Buts | Buteur | Handicap | Mi-temps | Double chance | etc.\",\n  \"sousMarche\": \"la sélection précise visible (ex: PSG gagne, Plus de 2.5 buts, Mbappé 1er buteur, Nul, etc.)\",\n  \"cote\": nombre décimal exact visible (ex: 2.35),\n  \"mise\": nombre en euros exact visible,\n  \"gainPotentiel\": nombre en euros si visible sinon null,\n  \"resultat\": \"en cours | gagné | perdu (déduis depuis les couleurs/icônes de l'interface)\",\n  \"date\": \"YYYY-MM-DD (date du match si visible)\",\n  \"equipes\": \"Equipe A vs Equipe B si visible sinon null\"\n}\nSi une information est absente ou illisible mets null. JSON brut uniquement.` }
-              ]
-            }]
-          })
-        });
-        const data = await res.json();
-        const text = data.content?.map(c=>c.text||"").join("") || "";
-        const clean = text.replace(/```json|```/g,"").trim();
-        const parsed = JSON.parse(clean);
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || `Erreur ${res.status}`);
+        }
+        const parsed = await res.json();
         onResult(parsed);
         onClose();
       } catch(err) {
