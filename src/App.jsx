@@ -2244,23 +2244,28 @@ function ScanModal({ onResult, onClose }) {
     b64Reader.onload = async (ev) => {
       const base64 = ev.result.split(",")[1];
       try {
+        setError("📡 Connexion à l'API...");
         const res = await fetch("/api/scan", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ image: base64, mediaType: file.type })
         });
 
+        setError(`📡 Réponse reçue (status: ${res.status})`);
+
+        const rawText = await res.text();
+        setError(`📡 Données: ${rawText.substring(0, 100)}`);
+
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || `Erreur ${res.status}`);
+          throw new Error(`Erreur ${res.status}: ${rawText.substring(0, 200)}`);
         }
 
-        const parsed = await res.json();
+        const parsed = JSON.parse(rawText);
+        setError("");
         onResult(parsed);
         onClose();
       } catch(err) {
-        console.error("Scan error:", err);
-        setError(`Erreur : ${err.message || "image illisible ou connexion échouée"}`);
+        setError(`❌ ${err.message || "Erreur inconnue"}`);
       } finally { setLoading(false); }
     };
     b64Reader.readAsDataURL(file);
