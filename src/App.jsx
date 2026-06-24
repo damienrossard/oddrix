@@ -1885,13 +1885,18 @@ function LogoSVG({ size=44 }) {
   );
 }
 
-function SplashScreen({ userName, isNew=false }) {
+function SplashScreen({ userName, isNew=false, onEnd }) {
   const hour = new Date().getHours();
   const timeGreet = isNew
     ? `Bienvenue sur Oddrix${userName ? `, ${userName}` : ""} ! 🎉`
     : `${hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}${userName ? `, ${userName}` : ""} 👋`;
 
   const [ended, setEnded] = React.useState(false);
+
+  const handleEnd = () => {
+    setEnded(true);
+    setTimeout(() => { if (onEnd) onEnd(); }, 800);
+  };
 
   return (
     <div style={{
@@ -1909,7 +1914,7 @@ function SplashScreen({ userName, isNew=false }) {
         autoPlay
         muted
         playsInline
-        onEnded={()=>{ setEnded(true); setTimeout(()=>setScreen("home"), 800); }}
+        onEnded={handleEnd}
         style={{
           width:300, height:"auto",
           objectFit:"contain",
@@ -2677,7 +2682,7 @@ export default function App() {
   ];
 
   if (screen==="loading")    return <div style={{ background:"#0d1117", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><LogoSVG size={80}/></div>;
-  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser}/>;
+  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser} onEnd={()=>setShowSplash(false)}/>;
   if (screen==="onboarding") return <Onboarding onDone={()=>{ const trialEnd=new Date(user.trialEnd); setScreen(user.subscribed||trialEnd>new Date()?"app":"paywall"); }}/>;
   if (screen==="auth")       return <AuthScreen onAuth={handleAuth}/>;
   if (screen==="paywall")    return <PaywallScreen user={user} onSubscribe={handleSubscribe} onLogout={handleLogout}/>;
