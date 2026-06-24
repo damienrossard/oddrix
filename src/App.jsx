@@ -1885,13 +1885,13 @@ function LogoSVG({ size=44 }) {
   );
 }
 
-// ── Splash Screen 3 phases ───────────────────────────────────────────────
-// ── Splash Screen cinématique ────────────────────────────────────────────
 function SplashScreen({ userName, isNew=false }) {
   const hour = new Date().getHours();
   const timeGreet = isNew
     ? `Bienvenue sur Oddrix${userName ? `, ${userName}` : ""} ! 🎉`
     : `${hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir"}${userName ? `, ${userName}` : ""} 👋`;
+
+  const [ended, setEnded] = React.useState(false);
 
   return (
     <div style={{
@@ -1899,426 +1899,34 @@ function SplashScreen({ userName, isNew=false }) {
       background:"#0a0f0a",
       display:"flex", flexDirection:"column",
       alignItems:"center", justifyContent:"center",
-      zIndex:9999, overflow:"hidden",
-      animation:"splashFadeOut 11s ease forwards",
+      zIndex:9999,
+      opacity: ended ? 0 : 1,
+      transition: "opacity 0.8s ease",
+      pointerEvents: ended ? "none" : "auto",
     }}>
-      <style>{`
-        /* Fondu entrée logo */
-        @keyframes logoFadeIn {
-          0%   { opacity:0; transform:scale(.92); }
-          30%  { opacity:.3; }
-          60%  { opacity:.8; transform:scale(1.02); }
-          80%  { opacity:1; transform:scale(1); }
-          100% { opacity:1; transform:scale(1); }
-        }
-        /* Léger flottement après apparition */
-        @keyframes logoFloat {
-          0%,100% { transform:scale(1) translateY(0px); }
-          50%     { transform:scale(1) translateY(-6px); }
-        }
-        /* Texte fade in */
-        @keyframes textFadeIn {
-          from { opacity:0; transform:translateY(12px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-        /* Barre chargement */
-        @keyframes barLoad { from{width:0} to{width:100%} }
-        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
-        /* Fondu sortie écran complet */
-        @keyframes splashFadeOut {
-          0%,78% { opacity:1; }
-          95%    { opacity:0; }
-          100%   { opacity:0; pointer-events:none; }
-        }
-        /* Particules */
-        @keyframes spark {
-          0%,100% { transform:translateY(0) scale(1); opacity:.3; }
-          50%     { transform:translateY(-18px) scale(1.3); opacity:.7; }
-        }
-        /* Lueur logo */
-        @keyframes logoGlow {
-          0%,100% { filter:drop-shadow(0 0 20px rgba(0,230,118,.2)) drop-shadow(0 12px 30px rgba(0,0,0,.8)); }
-          50%     { filter:drop-shadow(0 0 40px rgba(118,255,3,.35)) drop-shadow(0 12px 30px rgba(0,0,0,.8)); }
-        }
-      `}</style>
-
-      {/* Particules discrètes */}
-      {[...Array(8)].map((_,i)=>(
-        <div key={i} style={{
-          position:"absolute",
-          width:2+(i%3), height:2+(i%3), borderRadius:"50%",
-          background:["#00e676","#76ff03","#1de9b6"][i%3],
-          left:`${8+i*11}%`, top:`${12+(i*17)%65}%`,
-          animation:`spark ${2+i*0.4}s ${i*0.3}s ease-in-out infinite`,
-        }}/>
-      ))}
-
-      {/* Logo — fondu lent sur 3 secondes */}
-      <div style={{
-        animation:"logoFadeIn 3s .3s ease forwards, logoFloat 3.5s 3.5s ease-in-out infinite, logoGlow 3s 3s ease-in-out infinite",
-        opacity:0,
-      }}>
-        <img
-          src={ODDRIX_LOGO}
-          alt="Oddrix"
-          style={{
-            width:300, height:"auto",
-            objectFit:"contain",
-            display:"block",
-          }}
-        />
-      </div>
-
-      {/* Texte de bienvenue */}
-      <div style={{
-        textAlign:"center", marginTop:16,
-        animation:"textFadeIn .8s 3.2s ease forwards", opacity:0
-      }}>
-        <div style={{
-          color:"#8b949e", fontSize:14, fontWeight:600,
-          letterSpacing:2, textTransform:"uppercase", marginBottom:6
-        }}>
+      <video
+        src="https://raw.githubusercontent.com/damienrossard/oddrix/main/Vid%C3%A9o%20logo%20Oddrix.mp4"
+        autoPlay
+        muted
+        playsInline
+        onEnded={()=>{ setEnded(true); setTimeout(()=>setScreen("home"), 800); }}
+        style={{
+          width:300, height:"auto",
+          objectFit:"contain",
+          display:"block",
+        }}
+      />
+      <div style={{ textAlign:"center", marginTop:16 }}>
+        <div style={{ color:COLORS.green, fontSize:20, fontWeight:700, letterSpacing:2 }}>
           {timeGreet}
         </div>
-        <div style={{
-          color:"#8b949e", fontSize:10,
-          letterSpacing:3, textTransform:"uppercase"
-        }}>
-          Statistiques · Analyses · Performance
+        <div style={{ color:COLORS.muted, fontSize:11, letterSpacing:3, marginTop:4 }}>
+          STATISTIQUES · ANALYSES · PERFORMANCE
         </div>
-      </div>
-
-      {/* Barre de chargement */}
-      <div style={{
-        width:180, height:3, background:"#1a2a1a", borderRadius:2,
-        marginTop:24, overflow:"hidden",
-        animation:"fadeIn .3s 4s ease forwards", opacity:0
-      }}>
-        <div style={{
-          height:"100%", borderRadius:2,
-          background:"linear-gradient(90deg,#1de9b6,#76ff03,#1de9b6)",
-          animation:"barLoad 5s 4.2s ease forwards", width:0
-        }}/>
-      </div>
-
-      {/* oddrix.fr */}
-      <div style={{
-        position:"absolute", bottom:32,
-        color:"#ffffff12", fontSize:10, letterSpacing:3, textTransform:"uppercase",
-        animation:"fadeIn .4s 4.5s ease forwards", opacity:0
-      }}>oddrix.fr</div>
-    </div>
-  );
-}
-// ── Onboarding (4 écrans) ─────────────────────────────────────────────────
-function Onboarding({ onDone }) {
-  const [step, setStep] = useState(0);
-  const steps = [
-    { emoji:"📊", title:"Suivez vos paris", desc:"Enregistrez chaque pari en quelques secondes — sport, marché, cote, mise, résultat. Tout est centralisé.", color:COLORS.green },
-    { emoji:"📈", title:"Analysez vos stats", desc:"ROI, taux de réussite, bankroll, performance par sport et par bookmaker. Comprenez où vous gagnez vraiment.", color:COLORS.teal },
-    { emoji:"🔥", title:"Progressez", desc:"Détectez vos points forts et faibles, suivez votre série de victoires et comparez-vous aux autres parieurs.", color:COLORS.amber },
-    { emoji:"🏆", title:"Prêt à jouer !", desc:"7 jours d'essai gratuit. Aucun paiement maintenant. Annulable à tout moment depuis votre profil.", color:COLORS.purple },
-  ];
-  const s = steps[step];
-
-  return (
-    <div style={{ background:COLORS.bg, minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:32, maxWidth:480, margin:"0 auto" }}>
-      <LogoSVG size={60}/>
-      <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", gap:20, paddingTop:32 }}>
-        <div style={{ fontSize:72, lineHeight:1 }}>{s.emoji}</div>
-        <div style={{ fontWeight:900, fontSize:26, lineHeight:1.2 }}>{s.title}</div>
-        <div style={{ color:COLORS.muted, fontSize:15, lineHeight:1.7, maxWidth:300 }}>{s.desc}</div>
-      </div>
-
-      {/* Indicateurs */}
-      <div style={{ display:"flex", gap:8, margin:"32px 0 24px" }}>
-        {steps.map((_,i)=>(
-          <div key={i} style={{ width: i===step?24:8, height:8, borderRadius:4, background: i===step?s.color:COLORS.border, transition:"all .3s" }}/>
-        ))}
-      </div>
-
-      <div style={{ display:"flex", gap:12, width:"100%" }}>
-        {step > 0 && (
-          <button onClick={()=>setStep(p=>p-1)} style={{ flex:1, background:"transparent", border:`1px solid ${COLORS.border}`, color:COLORS.muted, borderRadius:12, padding:"14px", fontWeight:700, fontSize:15, cursor:"pointer" }}>← Retour</button>
-        )}
-        <button onClick={()=>step<steps.length-1?setStep(p=>p+1):onDone()} style={{ flex:2, background:s.color, color:COLORS.bg, border:"none", borderRadius:12, padding:"14px", fontWeight:800, fontSize:15, cursor:"pointer" }}>
-          {step<steps.length-1 ? "Suivant →" : "🚀 Commencer !"}
-        </button>
-      </div>
-      {step===0 && <button onClick={onDone} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:12, cursor:"pointer", marginTop:12 }}>Passer l'intro</button>}
-    </div>
-  );
-}
-
-// ── Mot de passe oublié ───────────────────────────────────────────────────
-function ForgotPasswordModal({ onClose }) {
-  const [email, setEmail]   = useState("");
-  const [step, setStep]     = useState("form"); // form | sent
-  const [error, setError]   = useState("");
-
-  const handleSend = async () => {
-    setError("");
-    if (!email.includes("@")) { setError("Email invalide."); return; }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setStep("sent");
-    } catch(e) {
-      if (e.code === "auth/user-not-found") setError("Aucun compte avec cet email.");
-      else setError("Erreur lors de l'envoi. Réessayez.");
-    }
-  };
-
-  const inputStyle = { width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:10, padding:"14px", color:COLORS.text, fontSize:15, fontFamily:"inherit", boxSizing:"border-box" };
-
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.9)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
-      <div style={{ background:COLORS.card, width:"100%", borderRadius:"20px 20px 0 0", padding:24 }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div style={{ fontWeight:800, fontSize:17 }}>🔑 Mot de passe oublié</div>
-          <button onClick={onClose} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:24, cursor:"pointer" }}>✕</button>
-        </div>
-        {step==="form" ? (<>
-          <p style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6, marginBottom:16 }}>Entrez votre email. Nous vous enverrons un lien de réinitialisation.</p>
-          <div style={{ marginBottom:16 }}>
-            <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>EMAIL</label>
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="votre@email.com" style={inputStyle}/>
-          </div>
-          {error && <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:8, padding:"10px", color:COLORS.red, fontSize:13, marginBottom:14 }}>⚠️ {error}</div>}
-          <button onClick={handleSend} style={{ background:COLORS.green, color:COLORS.bg, border:"none", borderRadius:12, padding:"14px", fontWeight:800, fontSize:15, cursor:"pointer", width:"100%" }}>
-            Envoyer le lien →
-          </button>
-        </>) : (
-          <div style={{ textAlign:"center", padding:"20px 0" }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>📧</div>
-            <div style={{ fontWeight:800, fontSize:16, marginBottom:8 }}>Email envoyé !</div>
-            <div style={{ color:COLORS.muted, fontSize:13, lineHeight:1.6, marginBottom:20 }}>
-              Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.<br/>
-              <span style={{ color:COLORS.amber, fontSize:12 }}>(En phase de test : consultez la console développeur)</span>
-            </div>
-            <button onClick={onClose} style={{ background:COLORS.green, color:COLORS.bg, border:"none", borderRadius:12, padding:"13px 24px", fontWeight:800, cursor:"pointer" }}>Fermer</button>
-          </div>
-        )}
       </div>
     </div>
   );
 }
-
-// ── Modifier profil ───────────────────────────────────────────────────────
-function EditProfileModal({ user, onSave, onClose }) {
-  const [name, setName]         = useState(user?.name||"");
-  const [email, setEmail]       = useState(user?.email||"");
-  const [oldPwd, setOldPwd]     = useState("");
-  const [newPwd, setNewPwd]     = useState("");
-  const [error, setError]       = useState("");
-  const [success, setSuccess]   = useState("");
-
-  const inputStyle = { width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:10, padding:"13px", color:COLORS.text, fontSize:14, fontFamily:"inherit", boxSizing:"border-box" };
-
-  const handleSave = () => {
-    setError(""); setSuccess("");
-    if (!name.trim()) { setError("Le prénom ne peut pas être vide."); return; }
-    if (!email.includes("@")) { setError("Email invalide."); return; }
-    if (newPwd && newPwd.length < 6) { setError("Nouveau mot de passe : 6 caractères min."); return; }
-    if (newPwd && oldPwd !== user.password) { setError("Ancien mot de passe incorrect."); return; }
-
-    const users = JSON.parse(localStorage.getItem("sb_users")||"[]");
-    const idx = users.findIndex(u=>u.id===user.id);
-    if (email !== user.email && users.find(u=>u.email===email && u.id!==user.id)) { setError("Cet email est déjà utilisé."); return; }
-    users[idx].name  = name.trim();
-    users[idx].email = email;
-    if (newPwd) users[idx].password = newPwd;
-    localStorage.setItem("sb_users", JSON.stringify(users));
-    setSuccess("Profil mis à jour ✅");
-    setTimeout(()=>{ onSave(users[idx]); onClose(); }, 1000);
-  };
-
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.9)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
-      <div style={{ background:COLORS.card, width:"100%", borderRadius:"20px 20px 0 0", padding:24, maxHeight:"90vh", overflowY:"auto" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-          <div style={{ fontWeight:800, fontSize:17 }}>✏️ Modifier mon profil</div>
-          <button onClick={onClose} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:24, cursor:"pointer" }}>✕</button>
-        </div>
-
-        {/* Pseudo non modifiable */}
-        <div style={{ marginBottom:14 }}>
-          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>PSEUDO (non modifiable)</label>
-          <div style={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:10, padding:"13px", color:COLORS.muted, fontSize:14 }}>@{user?.pseudo}</div>
-        </div>
-
-        <div style={{ marginBottom:14 }}>
-          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>PRÉNOM</label>
-          <input value={name} onChange={e=>setName(e.target.value)} style={inputStyle}/>
-        </div>
-        <div style={{ marginBottom:14 }}>
-          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>EMAIL</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle}/>
-        </div>
-
-        <div style={{ background:COLORS.card2, borderRadius:12, padding:14, marginBottom:14 }}>
-          <div style={{ color:COLORS.text, fontWeight:600, fontSize:13, marginBottom:12 }}>🔒 Changer le mot de passe</div>
-          <div style={{ marginBottom:10 }}>
-            <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>ANCIEN MOT DE PASSE</label>
-            <input type="password" value={oldPwd} onChange={e=>setOldPwd(e.target.value)} placeholder="Laisser vide pour ne pas changer" style={inputStyle}/>
-          </div>
-          <div>
-            <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>NOUVEAU MOT DE PASSE</label>
-            <input type="password" value={newPwd} onChange={e=>setNewPwd(e.target.value)} placeholder="6 caractères minimum" style={inputStyle}/>
-          </div>
-        </div>
-
-        {error && <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:8, padding:"10px", color:COLORS.red, fontSize:13, marginBottom:14 }}>⚠️ {error}</div>}
-        {success && <div style={{ background:`${COLORS.green}18`, border:`1px solid ${COLORS.green}44`, borderRadius:8, padding:"10px", color:COLORS.green, fontSize:13, marginBottom:14 }}>{success}</div>}
-
-        <button onClick={handleSave} style={{ background:COLORS.green, color:COLORS.bg, border:"none", borderRadius:12, padding:"14px", fontWeight:800, fontSize:15, cursor:"pointer", width:"100%" }}>
-          💾 Enregistrer les modifications
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Supprimer compte ──────────────────────────────────────────────────────
-function DeleteAccountModal({ user, onDeleted, onClose }) {
-  const [confirm, setConfirm] = useState("");
-  const [error, setError]     = useState("");
-
-  const handleDelete = async () => {
-    if (confirm !== "SUPPRIMER") { setError('Tapez exactement "SUPPRIMER" pour confirmer.'); return; }
-    try {
-      const currentUser = auth.currentUser;
-      if (currentUser) await currentUser.delete();
-      await signOut(auth);
-      onDeleted();
-    } catch(e) {
-      if (e.code === "auth/requires-recent-login") {
-        setError("Pour des raisons de sécurité, reconnectez-vous avant de supprimer votre compte.");
-      } else {
-        setError("Erreur lors de la suppression. Réessayez.");
-      }
-    }
-  };
-
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:300, display:"flex", alignItems:"center", padding:24 }}>
-      <div style={{ background:COLORS.card, border:`1px solid ${COLORS.red}44`, borderRadius:20, padding:24, width:"100%" }}>
-        <div style={{ fontSize:44, textAlign:"center", marginBottom:12 }}>⚠️</div>
-        <div style={{ fontWeight:900, fontSize:18, textAlign:"center", marginBottom:8, color:COLORS.red }}>Supprimer mon compte</div>
-        <p style={{ color:COLORS.muted, fontSize:13, textAlign:"center", lineHeight:1.6, marginBottom:20 }}>
-          Cette action est <strong style={{color:COLORS.red}}>irréversible</strong>. Tous vos paris, statistiques et données seront définitivement supprimés conformément au RGPD.
-        </p>
-        <div style={{ marginBottom:16 }}>
-          <label style={{ color:COLORS.muted, fontSize:12, fontWeight:600, display:"block", marginBottom:6 }}>Tapez SUPPRIMER pour confirmer</label>
-          <input value={confirm} onChange={e=>setConfirm(e.target.value)} placeholder="SUPPRIMER" style={{ width:"100%", background:COLORS.card2, border:`1px solid ${COLORS.red}44`, borderRadius:10, padding:"13px", color:COLORS.red, fontSize:14, fontFamily:"inherit", boxSizing:"border-box", textAlign:"center", fontWeight:700, letterSpacing:2 }}/>
-        </div>
-        {error && <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:8, padding:"10px", color:COLORS.red, fontSize:13, marginBottom:14 }}>⚠️ {error}</div>}
-        <button onClick={handleDelete} style={{ background:COLORS.red, color:"#fff", border:"none", borderRadius:12, padding:"14px", fontWeight:800, fontSize:15, cursor:"pointer", width:"100%", marginBottom:10 }}>
-          🗑 Supprimer définitivement
-        </button>
-        <button onClick={onClose} style={{ background:"transparent", border:`1px solid ${COLORS.border}`, color:COLORS.muted, borderRadius:12, padding:"12px", fontWeight:700, fontSize:14, cursor:"pointer", width:"100%" }}>
-          Annuler
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Scanner de ticket (IA) ────────────────────────────────────────────────
-function ScanModal({ onResult, onClose }) {
-  const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const [error, setError]     = useState("");
-
-  const handleFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setError(""); setLoading(true);
-
-    try {
-      // Tout en une seule promesse
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = ev => resolve(ev.target.result);
-        reader.onerror = () => reject(new Error("Lecture fichier échouée"));
-        reader.readAsDataURL(file);
-      });
-
-      setPreview(dataUrl);
-      const base64 = dataUrl.split(",")[1];
-      const mediaType = file.type || "image/jpeg";
-
-      const res = await fetch("https://splendorous-khapse-9de1d7.netlify.app/.netlify/functions/scan", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ image: base64, mediaType })
-      });
-
-      const rawText = await res.text();
-      if (!res.ok) throw new Error(`Erreur ${res.status}: ${rawText.substring(0,150)}`);
-      const parsed = JSON.parse(rawText);
-      onResult(parsed);
-      onClose();
-    } catch(err) {
-      setError(`❌ ${err.message || "Erreur inconnue"}`);
-    } finally { setLoading(false); }
-  };
-
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.9)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
-      <div style={{ background:COLORS.card, width:"100%", borderRadius:"20px 20px 0 0", padding:24, maxHeight:"90vh", overflowY:"auto" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-          <div style={{ fontWeight:800, fontSize:17 }}>📸 Scanner un ticket</div>
-          <button onClick={onClose} style={{ background:"transparent", border:"none", color:COLORS.muted, fontSize:24, cursor:"pointer" }}>✕</button>
-        </div>
-
-        {/* Instructions */}
-        <div style={{ background:COLORS.card2, border:`1px solid ${COLORS.border}`, borderRadius:12, padding:14, marginBottom:16, fontSize:13, lineHeight:1.7 }}>
-          <div style={{ color:COLORS.text, fontWeight:700, marginBottom:6 }}>📋 Comment bien scanner :</div>
-          <div style={{ color:COLORS.muted }}>
-            📱 <strong style={{color:COLORS.text}}>Capture d'écran</strong> → cadrez sur <strong style={{color:COLORS.amber}}>un seul pari</strong> (recadrez si nécessaire pour n'avoir que le pari à enregistrer visible)<br/>
-            📷 <strong style={{color:COLORS.text}}>Photo ticket papier</strong> → bonne lumière, image nette<br/>
-            <span style={{color:COLORS.teal}}>✨ L'IA extrait automatiquement sport, cote, mise et marché</span>
-          </div>
-        </div>
-
-        {preview && (
-          <img src={preview} style={{ width:"100%", borderRadius:12, marginBottom:16, maxHeight:220, objectFit:"contain", background:"#000" }} alt="aperçu"/>
-        )}
-
-        {loading ? (
-          <div style={{ textAlign:"center", padding:"24px 0" }}>
-            <div style={{ fontSize:40, marginBottom:10, animation:"spin 1s linear infinite" }}>🔍</div>
-            <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
-            <div style={{ color:COLORS.green, fontWeight:700, fontSize:16 }}>Analyse en cours...</div>
-            <div style={{ color:COLORS.muted, fontSize:12, marginTop:6 }}>L'IA lit votre ticket, merci de patienter</div>
-          </div>
-        ) : (
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            <label style={{ display:"block", background:COLORS.green, color:COLORS.bg, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:800, fontSize:15, cursor:"pointer" }}>
-              📷 Prendre une photo
-              <input type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display:"none" }}/>
-            </label>
-            <label style={{ display:"block", background:COLORS.card2, border:`1px solid ${COLORS.border}`, color:COLORS.text, borderRadius:12, padding:"14px", textAlign:"center", fontWeight:700, fontSize:15, cursor:"pointer" }}>
-              🖼️ Choisir depuis la galerie
-              <input type="file" accept="image/*" onChange={handleFile} style={{ display:"none" }}/>
-            </label>
-          </div>
-        )}
-
-        {error && (
-          <div style={{ background:`${COLORS.red}18`, border:`1px solid ${COLORS.red}44`, borderRadius:10, padding:"12px 14px", color:COLORS.red, fontSize:13, marginTop:14, lineHeight:1.5 }}>
-            ⚠️ {error}
-          </div>
-        )}
-
-        <p style={{ color:COLORS.muted, fontSize:11, textAlign:"center", marginTop:14, lineHeight:1.5 }}>
-          💡 Vérifiez toujours les données extraites avant d'enregistrer
-        </p>
-      </div>
-    </div>
-  );
-}
-
 
 
 // ── Modal CGV ─────────────────────────────────────────────────────────────
