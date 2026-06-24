@@ -2234,41 +2234,34 @@ function ScanModal({ onResult, onClose }) {
     if (!file) return;
     setError(""); setLoading(true);
 
-    // Aperçu
-    const reader = new FileReader();
-    reader.onload = r => setPreview(r.result);
-    reader.readAsDataURL(file);
+    try {
+      // Tout en une seule promesse
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = ev => resolve(ev.target.result);
+        reader.onerror = () => reject(new Error("Lecture fichier échouée"));
+        reader.readAsDataURL(file);
+      });
 
-    // Conversion base64
-    const b64Reader = new FileReader();
-    b64Reader.onload = async (ev) => {
-      const base64 = ev.result.split(",")[1];
-      try {
-        setError("📡 Connexion à l'API...");
-        const res = await fetch("/api/scan", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ image: base64, mediaType: file.type })
-        });
+      setPreview(dataUrl);
+      const base64 = dataUrl.split(",")[1];
+      const mediaType = file.type || "image/jpeg";
 
-        setError(`📡 Réponse reçue (status: ${res.status})`);
+      const res = await fetch("/api/scan", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ image: base64, mediaType })
+      });
 
-        const rawText = await res.text();
-        setError(`📡 Données: ${rawText.substring(0, 100)}`);
+      const rawText = await res.text();
+      if (!res.ok) throw new Error(`Erreur ${res.status}: ${rawText.substring(0,150)}`);
 
-        if (!res.ok) {
-          throw new Error(`Erreur ${res.status}: ${rawText.substring(0, 200)}`);
-        }
-
-        const parsed = JSON.parse(rawText);
-        setError("");
-        onResult(parsed);
-        onClose();
-      } catch(err) {
-        setError(`❌ ${err.message || "Erreur inconnue"}`);
-      } finally { setLoading(false); }
-    };
-    b64Reader.readAsDataURL(file);
+      const parsed = JSON.parse(rawText);
+      onResult(parsed);
+      onClose();
+    } catch(err) {
+      setError(`❌ ${err.message || "Erreur inconnue"}`);
+    } finally { setLoading(false); }
   };
 
   return (
