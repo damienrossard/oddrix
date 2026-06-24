@@ -2567,7 +2567,9 @@ export default function App() {
       const hasAccess = profile.subscribed || trialEnd > new Date();
 
       setIsNewUser(isNew);
+      setNextScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
       setShowSplash(true);
+      // Fallback si la vidéo ne se charge pas
       setTimeout(() => {
         setShowSplash(false);
         setScreen(isNew ? "onboarding" : (hasAccess ? "app" : "paywall"));
@@ -2682,7 +2684,7 @@ export default function App() {
   ];
 
   if (screen==="loading")    return <div style={{ background:"#0d1117", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}><LogoSVG size={80}/></div>;
-  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser} onEnd={()=>setShowSplash(false)}/>;
+  if (showSplash) return <SplashScreen userName={user?.name} isNew={isNewUser} onEnd={()=>{ setShowSplash(false); setScreen(nextScreen); }}/>;
   if (screen==="onboarding") return <Onboarding onDone={()=>{ const trialEnd=new Date(user.trialEnd); setScreen(user.subscribed||trialEnd>new Date()?"app":"paywall"); }}/>;
   if (screen==="auth")       return <AuthScreen onAuth={handleAuth}/>;
   if (screen==="paywall")    return <PaywallScreen user={user} onSubscribe={handleSubscribe} onLogout={handleLogout}/>;
